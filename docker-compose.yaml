@@ -1,17 +1,14 @@
-version: "3.9"
-
 services:
 
   db:
     image: postgres:18.3
     container_name: crispdm_db
-    restart: always
     environment:
       POSTGRES_DB: crispdm
       POSTGRES_USER: postgres
       POSTGRES_PASSWORD: postgres
     volumes:
-      - ./postgres_data:/var/lib/postgresql/data
+      - ./postgres_data:/var/lib/postgresql
     ports:
       - "5432:5432"
 
@@ -38,4 +35,4 @@ services:
       - ./frontend:/frontend
     ports:
       - "5173:5173"
-    command: sh -c "npm install && npm run dev"
+    command: sh -c "npm install && npm run dev -- --host"
