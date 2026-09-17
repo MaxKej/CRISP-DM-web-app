@@ -54,6 +54,8 @@ INSTALLED_APPS = [
     "rest_framework_simplejwt.token_blacklist",
 
     "users",
+    "projects",
+    "datasets",
 ]
 
 MIDDLEWARE = [
@@ -153,3 +155,6 @@ REST_FRAMEWORK = {
         "rest_framework.permissions.IsAuthenticated",
     ),
 }
+
+MEDIA_URL = "/media/"
+MEDIA_ROOT = BASE_DIR / "media"
