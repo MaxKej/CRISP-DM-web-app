@@ -4,7 +4,8 @@ from rest_framework.parsers import FormParser, MultiPartParser
 
 from .models import Dataset
 from .serializers import DatasetSerializer
-
+from rest_framework.response import Response
+from rest_framework import status
 
 class DatasetListCreateView(generics.ListCreateAPIView):
     serializer_class = DatasetSerializer
@@ -44,3 +45,15 @@ class DatasetDetailView(generics.RetrieveDestroyAPIView):
 
         if file:
             file.delete(save=False)
+
+    def destroy(self, request, *args, **kwargs):
+        instance = self.get_object()
+
+        self.perform_destroy(instance)
+
+        return Response(
+            {
+                "detail": "Dataset został usunięty."
+            },
+            status=status.HTTP_200_OK,
+        )
