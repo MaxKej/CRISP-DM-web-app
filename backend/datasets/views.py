@@ -1,13 +1,16 @@
 from rest_framework import generics
-from rest_framework.exceptions import PermissionDenied
+from rest_framework.exceptions import PermissionDenied, ValidationError
 from rest_framework.parsers import FormParser, MultiPartParser
-
-from .models import Dataset
-from .serializers import DatasetSerializer
 from rest_framework.response import Response
 from rest_framework import status
 
+from .models import Dataset
+from .serializers import DatasetSerializer
+from .profiling import profile_dataset
+from .charts import create_chart
+
 class DatasetListCreateView(generics.ListCreateAPIView):
+
     serializer_class = DatasetSerializer
 
     parser_classes = [
@@ -57,3 +60,55 @@ class DatasetDetailView(generics.RetrieveDestroyAPIView):
             },
             status=status.HTTP_200_OK,
         )
+
+class DatasetProfileView(generics.RetrieveAPIView):
+
+    serializer_class = DatasetSerializer
+
+    def get_queryset(self):
+        return Dataset.objects.filter(
+            project__owner=self.request.user
+        )
+
+    def retrieve(self, request, *args, **kwargs):
+        dataset = self.get_object()
+
+        profile = profile_dataset(dataset)
+
+        return Response(profile)
+
+class ChartView(generics.RetrieveAPIView):
+
+    def get_queryset(self):
+        return Dataset.objects.filter(
+            project__owner=self.request.user
+        )
+
+    def retrieve(self, request, *args, **kwargs):
+        dataset = self.get_object()
+
+        chart_type = request.query_params.get("type")
+        x = request.query_params.get("x")
+        y = request.query_params.get("y")
+        column = request.query_params.get("column")
+
+        if not chart_type:
+            raise ValidationError(
+                "Parametr 'type' jest wymagany."
+            )
+
+        try:
+            chart = create_chart(
+                dataset=dataset,
+                chart_type=chart_type,
+                x=x,
+                y=y,
+                column=column,
+            )
+
+        except ValueError as exc:
+            raise ValidationError(
+                str(exc)
+            ) from exc
+
+        return Response(chart)
