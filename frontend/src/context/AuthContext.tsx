@@ -10,6 +10,7 @@ import {
   getMe,
   login as loginApi,
   logout as logoutApi,
+  updateMe,
 } from "../api/auth";
 
 import type { LoginData, User } from "../types/auth";
@@ -21,6 +22,7 @@ interface AuthContextType {
   isLoading: boolean;
   login: (data: LoginData) => Promise<void>;
   logout: () => Promise<void>;
+  updateProfile: (data: Partial<User>) => Promise<void>;
 }
 
 const AuthContext = createContext<AuthContextType | undefined>(
@@ -94,6 +96,13 @@ export const AuthProvider = ({
     }
   };
 
+  const updateProfile = async (
+    data: Partial<User>
+  ) => {
+    const updatedUser = await updateMe(data);
+    setUser(updatedUser);
+  };
+
   return (
     <AuthContext.Provider
       value={{
@@ -103,6 +112,7 @@ export const AuthProvider = ({
         isLoading,
         login,
         logout,
+        updateProfile,
       }}
     >
       {children}
@@ -118,6 +128,8 @@ export const useAuth = (): AuthContextType => {
       "useAuth musi być używany wewnątrz AuthProvider."
     );
   }
+
+
 
   return context;
 };

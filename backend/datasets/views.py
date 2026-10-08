@@ -1,27 +1,31 @@
-from rest_framework import generics
+from rest_framework import generics, status
 from rest_framework.exceptions import PermissionDenied, ValidationError
 from rest_framework.parsers import FormParser, MultiPartParser
 from rest_framework.response import Response
-from rest_framework import status
 
 from .models import Dataset
 from .serializers import DatasetSerializer
 from .profiling import profile_dataset
 from .charts import create_chart
 
+
 class DatasetListCreateView(generics.ListCreateAPIView):
-
     serializer_class = DatasetSerializer
-
-    parser_classes = [
-        MultiPartParser,
-        FormParser,
-    ]
+    parser_classes = [MultiPartParser, FormParser]
 
     def get_queryset(self):
-        return Dataset.objects.filter(
+        queryset = Dataset.objects.filter(
             project__owner=self.request.user
         ).order_by("-updated_at")
+
+        project_id = self.request.query_params.get("project")
+
+        if project_id:
+            queryset = queryset.filter(
+                project_id=project_id
+            )
+
+        return queryset
 
     def perform_create(self, serializer):
         project = serializer.validated_data["project"]
@@ -32,6 +36,7 @@ class DatasetListCreateView(generics.ListCreateAPIView):
             )
 
         serializer.save()
+
 
 class DatasetDetailView(generics.RetrieveDestroyAPIView):
     serializer_class = DatasetSerializer
@@ -61,8 +66,8 @@ class DatasetDetailView(generics.RetrieveDestroyAPIView):
             status=status.HTTP_200_OK,
         )
 
-class DatasetProfileView(generics.RetrieveAPIView):
 
+class DatasetProfileView(generics.RetrieveAPIView):
     serializer_class = DatasetSerializer
 
     def get_queryset(self):
@@ -77,8 +82,8 @@ class DatasetProfileView(generics.RetrieveAPIView):
 
         return Response(profile)
 
-class ChartView(generics.RetrieveAPIView):
 
+class ChartView(generics.RetrieveAPIView):
     def get_queryset(self):
         return Dataset.objects.filter(
             project__owner=self.request.user
@@ -105,10 +110,7 @@ class ChartView(generics.RetrieveAPIView):
                 y=y,
                 column=column,
             )
-
         except ValueError as exc:
-            raise ValidationError(
-                str(exc)
-            ) from exc
+            raise ValidationError(str(exc)) from exc
 
         return Response(chart)

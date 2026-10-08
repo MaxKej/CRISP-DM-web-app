@@ -3,15 +3,17 @@ import type { SubmitEvent } from "react";
 import { Link, useNavigate } from "react-router-dom";
 
 import { useAuth } from "../../context/AuthContext";
+import { useNotification } from "../../context/NotificationContext";
 
 const LoginPage = () => {
   const navigate = useNavigate();
+
   const { login } = useAuth();
+  const { showNotification } = useNotification();
 
   const [username, setUsername] = useState("");
   const [password, setPassword] = useState("");
 
-  const [error, setError] = useState("");
   const [isLoading, setIsLoading] = useState(false);
 
   const handleSubmit = async (
@@ -19,7 +21,6 @@ const LoginPage = () => {
   ) => {
     event.preventDefault();
 
-    setError("");
     setIsLoading(true);
 
     try {
@@ -28,20 +29,29 @@ const LoginPage = () => {
         password,
       });
 
+      showNotification(
+        "Zalogowano pomyślnie.",
+        "success"
+      );
+
       navigate("/projects");
     } catch (error: any) {
       const data = error.response?.data;
 
       if (data && typeof data === "object") {
         if (typeof data.detail === "string") {
-          setError(data.detail);
+          showNotification(data.detail, "error");
         } else {
-          setError(
-            "Nieprawidłowa nazwa użytkownika lub hasło."
+          showNotification(
+            "Nieprawidłowa nazwa użytkownika lub hasło.",
+            "error"
           );
         }
       } else {
-        setError("Nie udało się połączyć z serwerem.");
+        showNotification(
+          "Nie udało się połączyć z serwerem.",
+          "error"
+        );
       }
     } finally {
       setIsLoading(false);
@@ -55,13 +65,10 @@ const LoginPage = () => {
           Logowanie
         </h1>
 
-        {error && (
-          <div className="mb-4 whitespace-pre-line rounded-md bg-red-100 p-3 text-sm text-red-700">
-            {error}
-          </div>
-        )}
-
-        <form onSubmit={handleSubmit} className="space-y-4">
+        <form
+          onSubmit={handleSubmit}
+          className="space-y-4"
+        >
           <div>
             <label
               htmlFor="username"
@@ -107,7 +114,9 @@ const LoginPage = () => {
             disabled={isLoading}
             className="w-full rounded-md bg-blue-600 px-4 py-2 text-white hover:bg-blue-700 disabled:opacity-50"
           >
-            {isLoading ? "Logowanie..." : "Zaloguj się"}
+            {isLoading
+              ? "Logowanie..."
+              : "Zaloguj się"}
           </button>
         </form>
 

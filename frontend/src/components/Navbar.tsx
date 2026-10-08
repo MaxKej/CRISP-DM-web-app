@@ -1,5 +1,4 @@
 import { Link, useNavigate } from "react-router-dom";
-
 import { useAuth } from "../context/AuthContext";
 
 const Navbar = () => {
@@ -29,9 +28,12 @@ const Navbar = () => {
             Projekty
           </Link>
 
-          <span className="text-sm text-gray-600">
+          <Link
+            to="/profile"
+            className="text-sm text-gray-600 hover:text-blue-600"
+          >
             {user?.username}
-          </span>
+          </Link>
 
           <button
             onClick={handleLogout}
