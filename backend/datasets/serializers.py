@@ -2,7 +2,7 @@ from pathlib import Path
 
 from rest_framework import serializers
 
-from .models import Dataset
+from .models import Dataset, DatasetColumnType
 
 
 class DatasetSerializer(serializers.ModelSerializer):
@@ -48,3 +48,22 @@ class DatasetSerializer(serializers.ModelSerializer):
         validated_data["name"] = filename
 
         return super().create(validated_data)
+
+class DatasetColumnTypeSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = DatasetColumnType
+        fields = ["id", "column_name", "semantic_type"]
+        read_only_fields = ["id"]
+
+    def validate_semantic_type(self, value):
+        allowed_types = {
+            DatasetColumnType.SemanticType.QUANTITATIVE,
+            DatasetColumnType.SemanticType.QUALITATIVE,
+        }
+
+        if value not in allowed_types:
+            raise serializers.ValidationError(
+                "Nieobsługiwany typ analityczny."
+            )
+
+        return value

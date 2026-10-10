@@ -1,11 +1,13 @@
+import json
+
 from rest_framework import generics, status
 from rest_framework.exceptions import PermissionDenied, ValidationError
 from rest_framework.parsers import FormParser, MultiPartParser
 from rest_framework.response import Response
 
-from .models import Dataset
-from .serializers import DatasetSerializer
-from .profiling import profile_dataset
+from .models import Dataset, DatasetColumnType
+from .serializers import DatasetSerializer, DatasetColumnTypeSerializer
+from .profiling import load_dataset, profile_dataset
 from .charts import create_chart
 
 
@@ -114,3 +116,95 @@ class ChartView(generics.RetrieveAPIView):
             raise ValidationError(str(exc)) from exc
 
         return Response(chart)
+
+class DatasetPreviewView(generics.RetrieveAPIView):
+    serializer_class = DatasetSerializer
+
+    def get_queryset(self):
+        return Dataset.objects.filter(
+            project__owner=self.request.user
+        )
+
+    def retrieve(self, request, *args, **kwargs):
+        dataset = self.get_object()
+
+        try:
+            dataframe = load_dataset(dataset)
+        except (ValueError, OSError) as exc:
+            raise ValidationError(str(exc)) from exc
+
+        preview = dataframe.head(10)
+
+        # JSON poprawnie obsługuje braki danych i daty.
+        rows = json.loads(
+            preview.to_json(
+                orient="records",
+                date_format="iso",
+                force_ascii=False,
+            )
+        )
+
+        return Response({
+            "dataset_id": dataset.id,
+            "dataset_name": dataset.name,
+            "columns": [str(column) for column in dataframe.columns],
+            "rows": rows,
+            "preview_rows": len(rows),
+        })
+
+class DatasetColumnTypeListView(generics.ListAPIView):
+    serializer_class = DatasetColumnTypeSerializer
+
+    def get_queryset(self):
+        dataset_id = self.kwargs["dataset_id"]
+
+        return DatasetColumnType.objects.filter(
+            dataset_id=dataset_id,
+            dataset__project__owner=self.request.user,
+        )
+
+
+class DatasetColumnTypeDetailView(generics.GenericAPIView):
+    serializer_class = DatasetColumnTypeSerializer
+
+    def get_dataset(self):
+        return generics.get_object_or_404(
+            Dataset.objects.filter(
+                project__owner=self.request.user,
+            ),
+            pk=self.kwargs["dataset_id"],
+        )
+
+    def put(self, request, *args, **kwargs):
+        dataset = self.get_dataset()
+        column_name = self.kwargs["column_name"]
+
+        try:
+            dataframe = load_dataset(dataset)
+        except (ValueError, OSError) as exc:
+            raise ValidationError(str(exc)) from exc
+
+        columns = [str(column) for column in dataframe.columns]
+
+        if column_name not in columns:
+            raise ValidationError(
+                {"column_name": "Kolumna nie istnieje w tym zbiorze."}
+            )
+
+        serializer = self.get_serializer(data=request.data)
+        serializer.is_valid(raise_exception=True)
+
+        if serializer.validated_data.get("column_name", column_name) != column_name:
+            raise ValidationError(
+                {"column_name": "Nazwa kolumny nie może być zmieniana."}
+            )
+
+        column_type, _ = DatasetColumnType.objects.update_or_create(
+            dataset=dataset,
+            column_name=column_name,
+            defaults={
+                "semantic_type": serializer.validated_data["semantic_type"],
+            },
+        )
+
+        return Response(self.get_serializer(column_type).data)

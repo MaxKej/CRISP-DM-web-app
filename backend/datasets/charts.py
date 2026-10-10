@@ -196,7 +196,80 @@ def create_chart(
             column,
         )
 
+    if chart_type == "boxplot":
+        if not column:
+            raise ValueError(
+                "Dla boxplota należy podać parametr 'column'."
+            )
+
+        return prepare_boxplot(
+            dataframe,
+            column,
+        )
+
     raise ValueError(
         "Nieobsługiwany typ wykresu. "
-        "Dostępne typy: histogram, scatter, bar."
+        "Dostępne typy: histogram, scatter, bar, boxplot."
     )
+
+def prepare_boxplot(
+    dataframe: pd.DataFrame,
+    column: str,
+) -> dict[str, Any]:
+    """
+    Przygotowuje dane do wykresu pudełkowego.
+    """
+    if column not in dataframe.columns:
+        raise ValueError(
+            f"Kolumna '{column}' nie istnieje."
+        )
+
+    series = dataframe[column]
+
+    if not pd.api.types.is_numeric_dtype(series):
+        raise ValueError(
+            "Boxplot może być utworzony tylko dla "
+            "kolumny numerycznej."
+        )
+
+    values = series.dropna()
+
+    if values.empty:
+        raise ValueError(
+            "Kolumna nie zawiera danych."
+        )
+
+    q1 = float(values.quantile(0.25))
+    median = float(values.quantile(0.50))
+    q3 = float(values.quantile(0.75))
+
+    iqr = q3 - q1
+
+    lower_fence = q1 - 1.5 * iqr
+    upper_fence = q3 + 1.5 * iqr
+
+    inliers = values[
+        (values >= lower_fence)
+        & (values <= upper_fence)
+    ]
+
+    outliers = values[
+        (values < lower_fence)
+        | (values > upper_fence)
+    ]
+
+    return {
+        "type": "boxplot",
+        "column": column,
+        "count": int(len(values)),
+        "q1": q1,
+        "median": median,
+        "q3": q3,
+        "whisker_min": float(inliers.min()),
+        "whisker_max": float(inliers.max()),
+        "outliers": [
+            float(value)
+            for value in outliers.tolist()
+        ],
+        "outliers_count": int(len(outliers)),
+    }
