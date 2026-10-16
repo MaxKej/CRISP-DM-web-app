@@ -1,0 +1,537 @@
+%\documentclass[12pt]{amsbook}
+\documentclass[12pt]{book}
+%\documentclass[12pt]{report}
+
+\usepackage{amssymb}
+\usepackage{amsmath}
+
+
+\usepackage[T1]{fontenc}
+\usepackage[utf8]{inputenc}
+\usepackage[polish]{babel}
+
+\usepackage{makeidx}
+
+\usepackage{listings} % dla kodów źródłowych
+
+\usepackage{graphicx} % do załączania rysunków
+
+
+\usepackage{caption} % dla spisu listingów
+%\DeclareCaptionType{code}[Code Listing][List of Code Listings] 
+\DeclareCaptionType{code}[Kod źródłowy][Lista kodów źródłowych] 
+
+%\usepackage{algorithmicx}
+%\usepackage{algpseudocode}
+\usepackage{algpseudocode}
+
+\title{Praca dyplomowa}
+
+\author{Sumienny Student}
+
+\date{Toruń 2019}
+
+
+\makeindex
+
+\begin{document}
+
+\begin{titlepage}
+
+%Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. Ut enim ad minim veniam, quis nostrud exercitation ullamco laboris nisi ut aliquip ex ea commodo consequat. Duis aute irure dolor in reprehenderit in voluptate velit esse cillum dolore eu fugiat nulla pariatur. Excepteur sint occaecat cupidatat non proident, sunt in culpa qui officia deserunt mollit anim id est laborum.
+
+\begin{center}
+
+%\LARGE
+\Large
+Uniwersytet Mikołaja Kopernika w Toruniu
+
+%\LARGE
+Wydział Matematyki i Informatyki
+
+%\bigskip
+%
+%\bigskip
+
+\vspace*{2.5cm}
+
+\LARGE
+% proszę poniżej wpisać swoje imię i nazwisko
+Maksymilian Kudelski
+
+%\Large
+\large
+numer albumu:
+% proszę poniżej wpisać swój numer indeksu
+308123
+
+Kierunek Informatyka
+
+%\bigskip
+
+\vspace*{2cm}
+
+\LARGE
+Praca inżynierska
+
+\medskip
+
+% proszę poniżej wpisać tytuł swojej pracy dyplomowej
+Aplikacja CRISP-DM
+
+\end{center}
+
+\vspace*{2.5cm}
+
+%\bigskip
+
+\hspace*{.45\columnwidth}
+\begin{minipage}{.45\columnwidth}
+\large
+Opiekun pracy dyplomowej 
+
+%$\langle$ \textit{proszę uzupełnić ...} $\rangle$
+dr Jerzy Białkowski
+\end{minipage}
+
+
+%\vspace*{2cm}
+%\vspace*{2cm}
+\vfill
+
+\begin{center}
+
+\large
+Toruń 2026
+
+\end{center}
+
+
+\end{titlepage}
+
+\thispagestyle{empty}
+
+%\maketitle
+
+%\setcounter{tocdepth}{1}
+\tableofcontents
+
+
+%\makeatletter
+%\chapter*{Introduction
+%        \addcontentsline{toc}{chapter}{Introduction}
+%        \@mkboth{%
+%            Introduction}{ Introduction}}%
+%\makeatother
+
+%\makeatletter
+%\chapter*{Wstęp
+%        \addcontentsline{toc}{chapter}{Wstęp}
+%%        \@mkboth{%
+%%            Wstęp}{ Wstęp}%
+%}
+%\makeatother
+
+%\chapter*{Wstęp}\addcontentsline{toc}{chapter}{Wstęp}
+\makeatletter
+\chapter*{Wstęp
+        \addcontentsline{toc}{chapter}{Wstęp}
+        \@mkboth{%
+            Wstęp}{ Wstęp}%
+}
+\makeatother
+
+W tym miejscu proszę zamieścić wstęp.
+
+Tekst do wpisania w pojedynczym akapicie
+może być łamany w dowolnych miejscach, byle
+nie był rozdzielany pustymi liniami.
+Przypominam, że pusta linia sugeruje
+podział i rozpoczęcie nowego akapitu.
+Ewentualne łamania linii możemy wymuszać
+komendą \texttt{\textbackslash linebreak},
+a zakończenie linii przez
+,,\texttt{\textbackslash\textbackslash}''
+lub komendą \texttt{\textbackslash newline}.
+Dodatkowo możemy wymuszać łamanie strony
+komendą \texttt{\textbackslash pagebreak},
+a zakończenie strony przez 
+komendą \texttt{\textbackslash newline}
+(ale bardzo bym prosił nie nadużywać tych
+komend).
+
+Przypominam też zalecenia/wytyczne dotyczące
+zawartości wstępu -- z zachowaniem % -- to "dłuższa" kreska
+numeracji z oryginalnego dokumentu.
+% gdybym chciał zapobiec dzieleniu
+% pomiędzy "z" i "oryginalnego", to mógłbym
+% użyć nie-blokującej spacji "~", czyli
+% z~oryginalnego
+
+\begin{enumerate}
+ \addtocounter{enumi}{8} % zmieniam wartość licznika wyliczenia
+% w większości przypadków nie będą Państwo musiel tego robić 
+	\item 
+
+Wstęp do pracy powinien zawierać informacje jaki jest cel / teza pracy.
+
+	\item 
+
+Wstęp pracy powinien zawierać informację o tym jaki jest wkład własny studentki/studenta.
+Przykładowo: informację, czy wykorzystany algorytm
+\begin{enumerate}
+	\item 
+ został wymyślony przez studentkę/studenta,
+	\item 
+ jest twórczą modyfikacją/kompilacją znanych algorytmów,
+	\item 
+ jest własną implementacją znanych algorytmów,
+	\item 
+ jest funkcją biblioteczną lub został w całości skopiowany z cytowanego źródła.
+\end{enumerate}
+\end{enumerate}
+
+Zwracam uwagę, że 
+przy \emph{jednostronnym} układzie pracy 
+każdy nowy rozdział powinien rozpoczynać
+\textbf{od nowej strony}, 
+a przy \textit{dwustronnym} układzie pracy 
+każdy nowy rozdział powinien rozpoczynać
+się \textbf{od nowej kartki} (czyli od strony nieparzystej).
+
+%Lorem ipsum dolor sit amet, consectetur adipiscing elit. Proin nibh augue, suscipit a, scelerisque sed, lacinia in, mi. Cras vel lorem. Etiam pellentesque aliquet tellus. Phasellus pharetra nulla ac diam. Quisque semper justo at risus. Donec venenatis, turpis vel hendrerit interdum, dui ligula ultricies purus, sed posuere libero dui id orci. Nam congue, pede vitae dapibus aliquet, elit magna vulputate arcu, vel tempus metus leo non est. Etiam sit amet lectus quis est congue mollis. Phasellus congue lacus eget neque. Phasellus ornare, ante vitae consectetuer consequat, purus sapien ultricies dolor, et mollis pede metus eget nisi. Praesent sodales velit quis augue. Cras suscipit, urna at aliquam rhoncus, urna quam viverra nisi, in interdum massa nibh nec erat.
+
+
+\chapter{Przedstawienie przedmiotu pracy}
+
+W większości prac warto będzie
+w tym miejscu 
+napisać rozdział 
+poświęcony \textbf{teoretycznej}
+stronie zagadnienia.
+
+W szczególnych przypadkach 
+zagadnienia będą tak obszerne,
+że warto będzie je podzielić
+na kilka rozdziałów.
+Na chwilę obecną przewiduję, że będzie
+tak u panów Doriana i Maksymiliana.
+% W szczególności ...
+
+
+Przykład jakiejś tabelki ilustrującej coś..
+\begin{table}[htbp]\small
+	\caption{Przykładowa tabela}
+	\label{sample-table}
+	\begin{center}
+		\begin{tabular}{|l|c|r|}
+			\hline
+			liczba & $x$ & $x^2 = x \cdot x$\\\hline\hline
+			jeden& 1 & 1  \\\hline
+			dziesięć & 10 & 100  \\\cline{2-3}
+			dwadzieścia & 20 & 400   \\\hline
+		\end{tabular}
+	\end{center}
+\end{table}
+
+
+\textit{(być może później dopiszę więcej...)}
+
+
+\chapter{Założenia projektowe}
+
+Na podstawie przeprowadzonej analizy określono wymagania funkcjonalne oraz niefunkcjonalne dla projektowanego systemu.
+Dodatkowo wymagania podzielono na obowiązkowe oraz pożądane, co pozwala wyznaczyć minimalny zakres implementacji
+oraz funkcjonalności rozszerzające możliwości aplikacji.
+
+\section{Wymagania funkcjonalne}
+
+\subsection{Funkcjonalności obowiązkowe}
+
+\begin{itemize}
+\item rejestracja i logowanie użytkowników,
+\item zarządzanie kontem użytkownika,
+\item tworzenie, edycja i usuwanie projektów analitycznych,
+\item przechowywanie projektów przypisanych do użytkownika,
+\item import plików CSV, XLSX, XLS oraz ODS,
+\item walidacja poprawności przesyłanych plików,
+\item podgląd zawartości zaimportowanych danych,
+\item odczyt nazw kolumn, typów danych oraz brakujących wartości,
+\item czyszczenie danych poprzez usuwanie pustych rekordów i duplikatów,
+\item identyfikacja i uzupełnianie brakujących danych,
+\item obsługa wielu arkuszy w plikach Excel i ODS,
+\item generowanie podstawowych statystyk danych,
+\item wizualizacja danych w postaci wykresów,
+\item filtrowanie i transformacja danych,
+\item podział danych na zbiory treningowe, testowe oraz walidacyjne,
+\item wybór algorytmu uczenia maszynowego (opcje podstawowe np. regresja, las drzerw losowych),
+\item trenowanie modeli uczenia maszynowego,
+\item ewaluacja modeli z wykorzystaniem metryk jakości,
+\item generowanie raportów PDF zawierających wyniki analiz.
+\end{itemize}
+
+\subsection{Funkcjonalności pożądane}
+
+\begin{itemize}
+\item porównywanie wyników różnych modeli,
+\item wybór algorytmu uczenia maszynowego (dodatkowe opcje np. gradient boosting),
+\item konfiguracja parametrów modelu,
+\item pobieranie wygenerowanych raportów PDF,
+\item archiwizacja raportów i historii analiz.
+\end{itemize}
+
+\section{Wymagania niefunkcjonalne}
+
+\subsection{Wymagania obowiązkowe}
+
+\begin{itemize}
+\item aplikacja musi działać w architekturze klient--serwer,
+\item backend musi zostać wykonany z wykorzystaniem frameworka Django,
+\item frontend musi zostać wykonany z wykorzystaniem biblioteki React,
+\item interfejs użytkownika musi wykorzystywać Tailwind CSS,
+\item dane muszą być przechowywane w bazie PostgreSQL,
+\item aplikacja musi umożliwiać realizację etapów metodologii CRISP-DM od Data Understanding do Evaluation,
+\item aplikacja musi zabezpieczać aplikację przed SQL Injection, XSS oraz CSRF,
+\item aplikacja musi walidować przesyłane pliki pod względem formatu i typu MIME,
+\item aplikacja musi zapewniać integralność danych zapisanych w bazie,
+\item aplikacja musi być odporna na błędne dane wejściowe.
+\end{itemize}
+
+\subsection{Wymagania pożądane}
+
+\begin{itemize}
+\item aplikacja powinna umożliwiać dalszą rozbudowę o kolejne etapy metodologii CRISP-DM (Business Understanding oraz Deployment),
+\item interfejs użytkownika powinien umożliwiać płynne przechodzenie między etapami analizy oraz łatwy powrót do wcześniejszych kroków i wprowadzanie korekt.
+\item interfejs użytkownika powinien być intuicyjny i responsywny,
+\item aplikacja powinna obsługiwać pliki o rozmiarze co najmniej 50 MB,
+\item aplikacja powinna prezentować czytelne komunikaty błędów.
+\end{itemize}
+
+\chapter{Opis narzędzi i technologii}
+
+W procesie projektowania i implementacji aplikacji wykorzystano nowoczesny stos technologiczny umożliwiający
+budowę skalowalnego systemu webowego zgodnego z aktualnymi standardami tworzenia oprogramowania.
+
+\section{Języki programowania}
+
+\subsection{Python}
+
+	Jako język programowania części pracy związanej z realizacją etapów metodologii CRISP-DM oraz backendu wybrano Pythona w wersji 3.12.
+
+	Python jest wysokopoziomowym, interpretowanym językiem programowania ogólnego przeznaczenia.
+Charakteryzuje się prostą i czytelną składnią, dzięki czemu znajduje zastosowanie zarówno w tworzeniu aplikacji webowych,
+jak i analizie danych, automatyzacji procesów, obliczeniach naukowych oraz projektach związanych ze sztuczną inteligencją i uczeniem maszynowym.
+Ze względu na swoją uniwersalność oraz bogaty ekosystem bibliotek jest obecnie jednym z najpopularniejszych języków programowania na świecie.
+
+	Posiada on rozbudowany ekosystem bibliotek do obróbki danych i uczenia maszynowego (pandas, scipy, scikit-learn) oraz budowy backendów aplikacji webowych (Django).
+Umożliwia to ograniczenie liczby wykorzystywanych języków programowania w warstwie serwerowej poprzez wyeliminowanie konieczności wywoływania kodu napisanego w języku R.
+Wybór Pythona pozwolił również na łatwą integrację modułów odpowiedzialnych za przetwarzanie danych, trenowanie modeli oraz udostępnianie wyników za pomocą interfejsu webowego.
+
+\subsection{JavaScript}
+
+	Jako język programowania warstwy frontendowej aplikacji wybrano JavaScript.
+W projekcie wykorzystano środowisko uruchomieniowe Node.js w wersji 24.14.0 oraz bibliotekę React w wersji 19.
+
+	JavaScript jest wysokopoziomowym, interpretowanym językiem programowania wykorzystywanym przede wszystkim do tworzenia interaktywnych aplikacji internetowych.
+Stanowi podstawową technologię współczesnych aplikacji webowych obok języków HTML i CSS. Dzięki możliwości uruchamiania zarówno po stronie przeglądarki,
+jak i serwera znajduje zastosowanie w budowie interfejsów użytkownika, aplikacji sieciowych oraz systemów czasu rzeczywistego.
+Język ten stanowi podstawę działania biblioteki React, która została wykorzystana do budowy interfejsu użytkownika aplikacji.
+
+	Zastosowanie JavaScriptu pozwoliło na stworzenie dynamicznego i responsywnego interfejsu komunikującego się z backendem za pomocą interfejsu REST API.
+Wykorzystanie środowiska Node.js umożliwiło zarządzanie zależnościami projektu oraz automatyzację procesu budowania aplikacji.
+Bogaty ekosystem bibliotek i narzędzi wspierających rozwój aplikacji frontendowych znacząco przyspiesza proces implementacji oraz utrzymania projektu.
+Dodatkową zaletą jest duża popularność języka, przekładająca się na szeroką dostępność dokumentacji, materiałów edukacyjnych oraz wsparcia społeczności programistycznej.
+
+\section{Baza danych}
+
+Jako system zarządzania relacyjną bazą danych wykorzystano PostgreSQL w wersji 18.3.
+PostgreSQL jest jednym z najpopularniejszych systemów bazodanowych typu open source, zapewniającym wysoką wydajność,
+niezawodność oraz zgodność ze standardem SQL. Został on wykorzystany do przechowywania danych aplikacji oraz realizacji
+operacji związanych z ich przetwarzaniem.
+
+\section{Backend}
+
+Warstwa serwerowa została zaimplementowana w języku Python z wykorzystaniem frameworka Django 6.0.3. 
+Django umożliwia szybkie tworzenie bezpiecznych aplikacji internetowych zgodnie z architekturą Model--View--Template (MVT). 
+Dodatkowo wykorzystano framework Django REST Framework służący do budowy interfejsu API.
+W projekcie zastosowano następujące biblioteki:
+
+\begin{itemize}
+\item asgiref 3.11.1 -- obsługa standardu ASGI,
+\item Django 6.0.3 -- główny framework aplikacji,
+\item sqlparse 0.5.5 -- parser składni SQL wykorzystywany przez Django,
+\item Django REST Framework -- implementacja usług REST API,
+\item psycopg2-binary -- komunikacja z bazą PostgreSQL,
+\item django-filter -- filtrowanie danych zwracanych przez API,
+\item python-decouple -- zarządzanie zmiennymi środowiskowymi,
+\item dj-database-url -- konfiguracja połączeń bazodanowych,
+\item django-simple-history -- przechowywanie historii zmian danych,
+\item gunicorn -- serwer aplikacyjny dla środowiska produkcyjnego,
+\item pytest -- framework testowy,
+\item pytest-django -- rozszerzenie testów dla aplikacji Django.
+\end{itemize}
+
+\section{Frontend}
+
+Warstwa kliencka została zaimplementowana przy użyciu środowiska Node.js w wersji 24.14.0 oraz biblioteki React 19,
+będącej najnowszą stabilną wersją kompatybilną z wykorzystanym środowiskiem uruchomieniowym. React umożliwia tworzenie dynamicznych i responsywnych interfejsów użytkownika opartych na architekturze komponentowej.
+Do stylizacji interfejsu wykorzystano framework Tailwind CSS. Narzędzie to pozwala na szybkie tworzenie nowoczesnych i spójnych wizualnie interfejsów użytkownika przy użyciu zestawu gotowych klas narzędziowych.
+
+\section{Konteneryzacja}
+
+W celu ułatwienia wdrażania oraz zapewnienia powtarzalności środowiska uruchomieniowego zastosowano platformę Docker. 
+Konteneryzacja pozwala na izolację poszczególnych komponentów systemu, takich jak aplikacja backendowa, frontend oraz baza danych,
+co upraszcza proces konfiguracji, testowania i wdrażania aplikacji na różnych środowiskach.
+
+\chapter{Struktura części programistycznej}
+
+Tutaj oczekiwałbym przedstawienia
+,,całościowej''
+projektu programistycznego.
+
+Zasadniczo można by ten rozdział podzielić
+na część poświęconą stronie sprzętowej
+(urządzenia i połączenia pomiędzy nimi)
+oraz programistycznej
+(moduły (w tym programy, biblioteki, bazy danych)
+i zależności pomiędzy nimi).
+Oczywiście poza opisem słownym warto byłoby 
+zilustrować te opisy stosownymi ilustracjami
+(np. diagramem wdrożenia dla strony ,,sprzętowej''
+i komponentów dla strony ,,programistycznej'').
+Oczywiście, \textbf{trzeba przedstawić cały system,
+a jeśli praca dotyczy tylko wybranych jego
+części, to trzeba wyraźnie zaznaczyć których}.
+
+W szczególnych przypadkach może okazać się
+zasadnym podzielenie tego rozdziału na dwa
+lub więcej rozdziałów.
+Jednak zazwyczaj wystarczy 
+podział na podrozdziały. 
+Dwa pierwsze z nich opisywałyby wówczas
+,,całościową'' strukturę projektu
+odpowiednio od strony sprzętowej
+i programistycznej.
+Kolejne podrozdziały mogłyby opisywać
+te moduły, które stworzył autor
+(względnie wybrane z nich) 
+Osobny podrozdział warto byłoby poświęcić
+strukturze bazy danych.
+
+\section{Struktura stworzonego systemu}
+
+\begin{figure}[h] % w [] podajemy miejsce umieszczenia rysunku
+\centerline{\setlength{\unitlength}{.4pt}%
+\begin{picture}(400,100)(-200,-50)
+\thinlines
+\put(0,0){\oval(400,100)}
+\put(0,0){\makebox(0,0)[b]{Przykładowy schemat)}}
+\end{picture}}
+  \caption{Diagram wdrożenia (podpis pod rysunkiem)}
+  \label{figure-1}
+\end{figure}
+
+\section{Budowa systemu}
+
+\begin{figure}[h]
+    \centering
+% poniższą linię należy odkomentować
+% i podstawić w niej nazwę załączanego pliku
+%        \includegraphics[width=140mm]{schemat.png}
+  \caption{Podpis pod drugim rysunkiem}
+  \label{figure-2}
+\end{figure}
+
+\section{Moduł 1}
+
+\section{Moduł 2}
+
+\section{Moduł 3}
+
+\section{Baza danych}
+
+
+\chapter{Opis wybranych szczegółów implementacji}
+
+\lstset{language=[Sharp]C,caption={Listing który można łamać pomiędzy  stronami},label=listing-1}
+\begin{lstlisting}[frame=single]  % Start your code-block
+
+for (int i = 0; i < 10; i++)
+{
+   Console.WriteLine("Linia {0}", i); // komentarz
+}
+\end{lstlisting}
+
+\begin{code}
+%\lstset{}
+\begin{lstlisting}[language=C,caption={Opis listingu},label=listing-2]  % Start your code-block
+
+string[] tekst = {"Tekst", "do", "wypisania"};
+
+foreach (string wyraz in tekst)
+{
+   Console.WriteLine(wyraz);
+}
+\end{lstlisting}
+\caption[Krótka wersja podpisu]{To jest właściwy opis listingu}
+\end{code}
+
+\chapter{Procedura testowa i testy}
+
+\chapter{Opis instalacji i używania}
+
+Pod koniec warto przedstawić 
+opis procedury instalacji/wdrażania systemu
+oraz ,,podręcznik użytkownika''.
+
+
+\chapter{Podsumowanie}
+
+Na koniec proszę umieścić podsumowanie.
+
+Warto zamieścić w nim m.in. możliwe kierunki
+i ścieżki rozwoju Państwa systemu.
+
+%
+%\section*{Wstęp}%\addcontentsline{toc}{section}{Wstep}
+%
+%
+%
+%\section{Przedstawienie przedmiotu pracy}
+%
+%
+%\section{Opis narzędzi i technologii}
+%
+%\subsection{Język C\#}
+%\subsection{Środowisko Visual Studio}
+
+
+Odesłania do listingu~\ref{listing-1} oraz rysunku~\ref{figure-2}.
+Cytowanie literatury z pozycji \cite[Twierdzenie~1.2]{AA1}.
+
+\listoffigures
+
+\listoftables
+
+\listofcodes
+
+
+\newpage
+%\addcontentsline{toc}{chapter}{Bibliography}
+\addcontentsline{toc}{chapter}{\rm Bibliografia}
+
+\frenchspacing
+\begin{thebibliography}{AAAA}
+
+\bibitem[AA1]{AA1}
+ Autor Anonimowy, ...
+
+
+\end{thebibliography}
+
+\newpage
+\addcontentsline{toc}{chapter}{\rm Index}
+\printindex
+
+
+\end{document}

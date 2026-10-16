@@ -1,0 +1,30 @@
+\babel@toc {polish}{}\relax 
+\contentsline {chapter}{Wstęp}{5}{}%
+\contentsline {chapter}{\numberline {1}Przedstawienie przedmiotu pracy}{7}{}%
+\contentsline {chapter}{\numberline {2}Założenia projektowe}{9}{}%
+\contentsline {section}{\numberline {2.1}Wymagania funkcjonalne}{9}{}%
+\contentsline {subsection}{\numberline {2.1.1}Funkcjonalności obowiązkowe}{9}{}%
+\contentsline {subsection}{\numberline {2.1.2}Funkcjonalności pożądane}{10}{}%
+\contentsline {section}{\numberline {2.2}Wymagania niefunkcjonalne}{10}{}%
+\contentsline {subsection}{\numberline {2.2.1}Wymagania obowiązkowe}{10}{}%
+\contentsline {subsection}{\numberline {2.2.2}Wymagania pożądane}{11}{}%
+\contentsline {chapter}{\numberline {3}Opis narzędzi i technologii}{13}{}%
+\contentsline {section}{\numberline {3.1}Języki programowania}{13}{}%
+\contentsline {subsection}{\numberline {3.1.1}Python}{13}{}%
+\contentsline {subsection}{\numberline {3.1.2}JavaScript}{14}{}%
+\contentsline {section}{\numberline {3.2}Baza danych}{14}{}%
+\contentsline {section}{\numberline {3.3}Backend}{14}{}%
+\contentsline {section}{\numberline {3.4}Frontend}{15}{}%
+\contentsline {section}{\numberline {3.5}Konteneryzacja}{16}{}%
+\contentsline {chapter}{\numberline {4}Struktura części programistycznej}{17}{}%
+\contentsline {section}{\numberline {4.1}Struktura stworzonego systemu}{18}{}%
+\contentsline {section}{\numberline {4.2}Budowa systemu}{18}{}%
+\contentsline {section}{\numberline {4.3}Moduł 1}{18}{}%
+\contentsline {section}{\numberline {4.4}Moduł 2}{18}{}%
+\contentsline {section}{\numberline {4.5}Moduł 3}{18}{}%
+\contentsline {section}{\numberline {4.6}Baza danych}{18}{}%
+\contentsline {chapter}{\numberline {5}Opis wybranych szczegółów implementacji}{19}{}%
+\contentsline {chapter}{\numberline {6}Procedura testowa i testy}{21}{}%
+\contentsline {chapter}{\numberline {7}Opis instalacji i używania}{23}{}%
+\contentsline {chapter}{\numberline {8}Podsumowanie}{25}{}%
+\contentsline {chapter}{\rm Bibliografia}{32}{}%
