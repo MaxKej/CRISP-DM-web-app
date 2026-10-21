@@ -316,7 +316,7 @@ budowę skalowalnego systemu webowego zgodnego z aktualnymi standardami tworzeni
 
 \subsection{Python}
 
-	Jako język programowania części pracy związanej z realizacją etapów metodologii CRISP-DM oraz backendu wybrano Pythona w wersji 3.12.
+	Jako język programowania części pracy związanej z realizacją etapów metodologii CRISP-DM oraz backendu wybrano Pythona w wersji 3.14.7.
 
 	Python jest wysokopoziomowym, interpretowanym językiem programowania ogólnego przeznaczenia.
 Charakteryzuje się prostą i czytelną składnią, dzięki czemu znajduje zastosowanie zarówno w tworzeniu aplikacji webowych,
@@ -330,7 +330,7 @@ Wybór Pythona pozwolił również na łatwą integrację modułów odpowiedzial
 \subsection{JavaScript}
 
 	Jako język programowania warstwy frontendowej aplikacji wybrano JavaScript.
-W projekcie wykorzystano środowisko uruchomieniowe Node.js w wersji 24.14.0 oraz bibliotekę React w wersji 19.
+W projekcie wykorzystano środowisko uruchomieniowe Node.js w wersji 26.8.2 oraz bibliotekę React w wersji 19.2.4.
 
 	JavaScript jest wysokopoziomowym, interpretowanym językiem programowania wykorzystywanym przede wszystkim do tworzenia interaktywnych aplikacji internetowych.
 Stanowi podstawową technologię współczesnych aplikacji webowych obok języków HTML i CSS. Dzięki możliwości uruchamiania zarówno po stronie przeglądarki,
@@ -344,7 +344,7 @@ Dodatkową zaletą jest duża popularność języka, przekładająca się na sze
 
 \section{Baza danych}
 
-Jako system zarządzania relacyjną bazą danych wykorzystano PostgreSQL w wersji 18.3.
+Jako system zarządzania relacyjną bazą danych wykorzystano PostgreSQL w wersji 18.6.
 PostgreSQL jest jednym z najpopularniejszych systemów bazodanowych typu open source, zapewniającym wysoką wydajność,
 niezawodność oraz zgodność ze standardem SQL. Został on wykorzystany do przechowywania danych aplikacji oraz realizacji
 operacji związanych z ich przetwarzaniem.
@@ -418,71 +418,187 @@ te moduły, które stworzył autor
 Osobny podrozdział warto byłoby poświęcić
 strukturze bazy danych.
 
-\section{Struktura stworzonego systemu}
+\section{Data Understanding}
 
-\begin{figure}[h] % w [] podajemy miejsce umieszczenia rysunku
-\centerline{\setlength{\unitlength}{.4pt}%
-\begin{picture}(400,100)(-200,-50)
-\thinlines
-\put(0,0){\oval(400,100)}
-\put(0,0){\makebox(0,0)[b]{Przykładowy schemat)}}
-\end{picture}}
-  \caption{Diagram wdrożenia (podpis pod rysunkiem)}
-  \label{figure-1}
-\end{figure}
+Etap Data Understanding w metodologii CRISP-DM odpowiada za
+wstępne poznanie zbioru danych oraz ocenę jego struktury i jakości.
+Jego celem jest przedstawienie użytkownikowi podstawowych informacji o danych,
+które mogą być istotne przed rozpoczęciem ich przygotowania
+podczas etapu Data Preparation. W aplikacji etap ten obejmuje analizę
+podstawowych statystyk, identyfikację brakujących wartości,
+prezentację rozkładów zmiennych oraz wizualizację wartości
+odstających.
 
-\section{Budowa systemu}
+Implementacja została podzielona na część backendową
+odpowiedzialną za analizę i przetwarzanie danych oraz część
+frontendową odpowiadającą za ich prezentację i umożliwienie
+użytkownikowi wprowadzania wybranych zmian.
 
-\begin{figure}[h]
-    \centering
-% poniższą linię należy odkomentować
-% i podstawić w niej nazwę załączanego pliku
-%        \includegraphics[width=140mm]{schemat.png}
-  \caption{Podpis pod drugim rysunkiem}
-  \label{figure-2}
-\end{figure}
+\subsection{Backend}
 
-\section{Moduł 1}
+Część backendowa etapu Data Understanding składa się z modułów
+Python odpowiedzialnych za wstępną analizę zbioru danych, przygotowanie
+wyników do wizualizacji oraz obsługę żądań wysyłanych przez
+frontend.
 
-\section{Moduł 2}
+\begin{itemize}
+	\item \texttt{profiling.py} -- odpowiada za profilowanie
+    zbioru danych, w tym analizę brakujących wartości,
+    wyznaczanie podstawowych statystyk oraz określanie
+    analitycznego typu zmiennych.
+	\item \texttt{charts.py} -- przygotowuje dane wykorzystywane
+    do prezentacji rozkładów zmiennych na histogramach lub
+    wykresach słupkowych.
+	\item \texttt{quality.py} -- przygotowuje dane niezbędne
+    do przedstawienia wykresu pudełkowego, który umożliwia
+    analizę rozkładu wartości liczbowych i wskazanie
+    potencjalnych wartości odstających.
+	\item \texttt{serializers.py} -- obsługuje walidację
+    i przekazywanie danych związanych ze zmianą typu
+    analitycznego kolumny przez użytkownika.
+	\item \texttt{views.py} -- udostępnia endpointy API
+    umożliwiające pobieranie wyników profilowania i danych
+    do wizualizacji oraz obsługę zmiany typu kolumny.
+\end{itemize}
 
-\section{Moduł 3}
+Profilowanie rozpoczyna się od analizy typów danych
+rozpoznanych podczas wczytywania zbioru. Na ich podstawie
+określany jest typ analityczny zmiennej, np. jakościowy
+lub ilościowy. Automatyczna klasyfikacja stanowi punkt
+wyjścia do dalszej analizy, ale może wymagać korekty
+w przypadku danych, których typ techniczny nie odzwierciedla
+ich rzeczywistego znaczenia.
 
-\section{Baza danych}
+Backend nie odpowiada za bezpośrednie rysowanie wykresów.
+Przygotowuje odpowiednie zestawy danych i przekazuje je
+za pośrednictwem API w formacie możliwym do wykorzystania
+przez frontend. Dzięki temu obliczenia związane z analizą
+danych są oddzielone od sposobu ich prezentacji.
+
+\subsection{Frontend}
+
+Frontend etapu Data Understanding odpowiada za prezentację
+informacji o zbiorze danych oraz umożliwia użytkownikowi
+interpretację wyników analizy i zmianę typu analitycznego
+wybranych kolumn.
+
+Najważniejsze komponenty i moduły tej części aplikacji to:
+
+\begin{itemize}
+	\item \texttt{DistributionChart} -- wizualizuje rozkład
+    wartości wybranej zmiennej na histogramie lub wykresie słupkowym.
+    Służy także do przedstawiania informacji o brakujących wartościach.
+
+	\item \texttt{ColumnTypeSelector} -- umożliwia użytkownikowi
+    zmianę typu analitycznego kolumny, gdy automatycznie
+    określony typ jest nieprawidłowy lub nie odpowiada
+    planowanemu zastosowaniu zmiennej w dalszej analizie.
+
+	\item \texttt{BoxplotChart} -- odpowiada za wizualizację
+    danych przygotowanych przez backend w postaci wykresu
+    pudełkowego, ułatwiającego analizę rozkładu wartości
+    oraz identyfikację potencjalnych obserwacji odstających.
+
+    \item \texttt{DatasetPage} -- stanowi główny widok etapu
+    Data Understanding. Integruje wymienione komponenty,
+    prezentuje podgląd pierwszych dziesięciu wierszy zbioru
+    oraz podstawowe statystyki poszczególnych kolumn.
+\end{itemize}
+
+Komponenty frontendowe pobierają dane z API i przekształcają
+je do postaci wymaganej przez wykorzystywane elementy
+wizualizacyjne. W przypadku zmiany typu kolumny frontend
+wysyła odpowiednie żądanie do backendu, który obsługuje
+zmianę zgodnie z przyjętą logiką aplikacji.
+
+Podział odpowiedzialności pomiędzy backendem a frontendem
+pozwala oddzielić logikę analizy danych od ich prezentacji.
+Backend odpowiada za obliczenia i przygotowanie wyników,
+natomiast frontend przedstawia je w formie tabel, statystyk
+i wykresów oraz udostępnia użytkownikowi interakcje
+związane z analizowanym zbiorem.
+
+Komponent \texttt{ColumnTypeSelector} umożliwia korektę
+automatycznie określonego typu analitycznego zmiennej.
+Jest to istotne w sytuacjach, w których typ techniczny kolumny
+nie odzwierciedla jej znaczenia lub planowanego zastosowania w dalszej analizie.
+
+Przykładem może być zmiana typu zmiennej docelowej z jakościowego na ilościowy,
+jeżeli analizowany problem wymaga przewidywania wartości liczbowych zamiast
+przypisywania obserwacji do klas. Innym przypadkiem jest zmienna liczbowa,
+której wartości reprezentują kategorie nominalne lub uporządkowane.
+Przykładowo, kody kategorii zapisane jako liczby nie powinny być
+automatycznie interpretowane jako wielkości, dla których sensowne
+jest wykonywanie działań arytmetycznych.
+
+Możliwość ręcznej korekty typu analitycznego pozwala użytkownikowi uwzględnić
+znaczenie badanej zmiennej, a nie tylko jej techniczną reprezentację.
+Informacja ta może być następnie wykorzystana w kolejnych etapach procesu CRISP-DM.
+% \section{Struktura stworzonego systemu}
+
+% \begin{figure}[h] % w [] podajemy miejsce umieszczenia rysunku
+% \centerline{\setlength{\unitlength}{.4pt}%
+% \begin{picture}(400,100)(-200,-50)
+% \thinlines
+% \put(0,0){\oval(400,100)}
+% \put(0,0){\makebox(0,0)[b]{Przykładowy schemat)}}
+% \end{picture}}
+%   \caption{Diagram wdrożenia (podpis pod rysunkiem)}
+%   \label{figure-1}
+% \end{figure}
+
+% \section{Budowa systemu}
+
+% \begin{figure}[h]
+%     \centering
+% % poniższą linię należy odkomentować
+% % i podstawić w niej nazwę załączanego pliku
+% %        \includegraphics[width=140mm]{schemat.png}
+%   \caption{Podpis pod drugim rysunkiem}
+%   \label{figure-2}
+% \end{figure}
+
+% \section{Moduł 1}
+
+% \section{Moduł 2}
+
+% \section{Moduł 3}
+
+% \section{Baza danych}
 
 
-\chapter{Opis wybranych szczegółów implementacji}
+% \chapter{Opis wybranych szczegółów implementacji}
 
-\lstset{language=[Sharp]C,caption={Listing który można łamać pomiędzy  stronami},label=listing-1}
-\begin{lstlisting}[frame=single]  % Start your code-block
+% \lstset{language=[Sharp]C,caption={Listing który można łamać pomiędzy  stronami},label=listing-1}
+% \begin{lstlisting}[frame=single]  % Start your code-block
 
-for (int i = 0; i < 10; i++)
-{
-   Console.WriteLine("Linia {0}", i); // komentarz
-}
-\end{lstlisting}
+% for (int i = 0; i < 10; i++)
+% {
+%    Console.WriteLine("Linia {0}", i); // komentarz
+% }
+% \end{lstlisting}
 
-\begin{code}
-%\lstset{}
-\begin{lstlisting}[language=C,caption={Opis listingu},label=listing-2]  % Start your code-block
+% \begin{code}
+% %\lstset{}
+% \begin{lstlisting}[language=C,caption={Opis listingu},label=listing-2]  % Start your code-block
 
-string[] tekst = {"Tekst", "do", "wypisania"};
+% string[] tekst = {"Tekst", "do", "wypisania"};
 
-foreach (string wyraz in tekst)
-{
-   Console.WriteLine(wyraz);
-}
-\end{lstlisting}
-\caption[Krótka wersja podpisu]{To jest właściwy opis listingu}
-\end{code}
+% foreach (string wyraz in tekst)
+% {
+%    Console.WriteLine(wyraz);
+% }
+% \end{lstlisting}
+% \caption[Krótka wersja podpisu]{To jest właściwy opis listingu}
+% \end{code}
 
-\chapter{Procedura testowa i testy}
+% \chapter{Procedura testowa i testy}
 
-\chapter{Opis instalacji i używania}
+% \chapter{Opis instalacji i używania}
 
-Pod koniec warto przedstawić 
-opis procedury instalacji/wdrażania systemu
-oraz ,,podręcznik użytkownika''.
+% Pod koniec warto przedstawić 
+% opis procedury instalacji/wdrażania systemu
+% oraz ,,podręcznik użytkownika''.
 
 
 \chapter{Podsumowanie}

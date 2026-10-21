@@ -140,6 +140,19 @@ export const getDatasetPreview = async (
 };
 
 type ChartType = "histogram" | "bar" | "boxplot";
+type DistributionChartType = "histogram" | "bar";
+
+export function getDatasetChart(
+  datasetId: number,
+  type: DistributionChartType,
+  column: string,
+): Promise<DistributionChartData>;
+
+export function getDatasetChart(
+  datasetId: number,
+  type: "boxplot",
+  column: string,
+): Promise<BoxplotData>;
 
 export async function getDatasetChart(
   datasetId: number,
