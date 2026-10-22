@@ -8,6 +8,14 @@ from .views import (
     DatasetPreviewView,
     DatasetColumnTypeListView,
     DatasetColumnTypeDetailView,
+    DatasetRemoveColumnsView,
+    DatasetRemoveEmptyRowsView,
+    DatasetRemoveDuplicatesView,
+    DatasetFillMissingValuesView,
+    DatasetCreateSyntheticColumnView,
+    DatasetTargetCorrelationsView,
+    DatasetTargetView,
+    DatasetCorrelationMatrixView,
 )
 
 urlpatterns = [
@@ -45,5 +53,45 @@ urlpatterns = [
         "<int:dataset_id>/column-types/<str:column_name>/",
         DatasetColumnTypeDetailView.as_view(),
         name="dataset-column-type-detail",
+    ),
+    path(
+        "<int:pk>/preparation/remove-columns/",
+        DatasetRemoveColumnsView.as_view(),
+        name="dataset-remove-columns",
+    ),
+    path(
+        "<int:pk>/preparation/remove-empty-rows/",
+        DatasetRemoveEmptyRowsView.as_view(),
+        name="dataset-remove-empty-rows",
+    ),
+    path(
+        "<int:pk>/preparation/remove-duplicates/",
+        DatasetRemoveDuplicatesView.as_view(),
+        name="dataset-remove-duplicates",
+    ),
+    path(
+        "<int:pk>/preparation/fill-missing-values/",
+        DatasetFillMissingValuesView.as_view(),
+        name="dataset-fill-missing-values",
+    ),
+    path(
+        "<int:pk>/preparation/create-synthetic-column/",
+        DatasetCreateSyntheticColumnView.as_view(),
+        name="dataset-create-synthetic-column",
+    ),
+    path(
+        "<int:pk>/target/",
+        DatasetTargetView.as_view(),
+        name="dataset-target",
+    ),
+    path(
+        "<int:pk>/correlations/",
+        DatasetCorrelationMatrixView.as_view(),
+        name="dataset-correlations",
+    ),
+    path(
+        "<int:pk>/target-correlations/",
+        DatasetTargetCorrelationsView.as_view(),
+        name="dataset-target-correlations",
     ),
 ]

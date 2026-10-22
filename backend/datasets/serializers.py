@@ -67,3 +67,62 @@ class DatasetColumnTypeSerializer(serializers.ModelSerializer):
             )
 
         return value
+
+class RemoveColumnsSerializer(serializers.Serializer):
+    columns = serializers.ListField(
+        child=serializers.CharField(
+            allow_blank=False,
+            trim_whitespace=False,
+        ),
+        allow_empty=False,
+    )
+
+
+class RemoveRowsSerializer(serializers.Serializer):
+    """Parametry operacji usuwania wierszy."""
+
+    save = serializers.BooleanField(
+        default=False,
+        required=False,
+    )
+
+
+class FillMissingValuesSerializer(serializers.Serializer):
+    methods = serializers.DictField(
+        child=serializers.ChoiceField(
+            choices=["mean", "median", "mode"],
+        ),
+        allow_empty=False,
+    )
+    save = serializers.BooleanField(
+        default=False,
+        required=False,
+    )
+
+class CreateSyntheticColumnSerializer(serializers.Serializer):
+    name = serializers.CharField(
+        max_length=255,
+        allow_blank=False,
+        trim_whitespace=True,
+    )
+    left_column = serializers.CharField(
+        allow_blank=False,
+        trim_whitespace=True,
+    )
+    operator = serializers.ChoiceField(
+        choices=["+", "-", "*", "/"],
+    )
+    right_column = serializers.CharField(
+        allow_blank=False,
+        trim_whitespace=True,
+    )
+    save = serializers.BooleanField(
+        default=False,
+        required=False,
+    )
+
+class TargetColumnSerializer(serializers.Serializer):
+    target_column = serializers.CharField(
+        allow_blank=True,
+        trim_whitespace=True,
+    )

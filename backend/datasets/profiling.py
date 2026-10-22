@@ -170,3 +170,123 @@ def get_boxplot_data(df: pd.DataFrame, column_name: str) -> dict[str, Any]:
         "outliers": [float(value) for value in outliers.tolist()],
         "outliers_count": int(len(outliers)),
     }
+
+def load_prepared_dataset(dataset) -> pd.DataFrame:
+    """Wczytuje przygotowany zbiór lub oryginalny plik."""
+    if dataset.prepared_file:
+        return load_dataset_file(dataset.prepared_file.path)
+
+    return load_dataset(dataset)
+
+def load_dataset_file(file_path: str) -> pd.DataFrame:
+    """Wczytuje plik CSV, XLSX, XLS lub ODS."""
+    extension = Path(file_path).suffix.lower()
+
+    if extension == ".csv":
+        dataframe = pd.read_csv(
+            file_path,
+            sep=None,
+            engine="python",
+            encoding="utf-8-sig",
+        )
+    elif extension == ".xlsx":
+        dataframe = pd.read_excel(file_path, engine="openpyxl")
+    elif extension == ".xls":
+        dataframe = pd.read_excel(file_path, engine="xlrd")
+    elif extension == ".ods":
+        dataframe = pd.read_excel(file_path, engine="odf")
+    else:
+        raise ValueError("Nieobsługiwany format pliku.")
+
+    dataframe.columns = [
+        str(column).replace("\ufeff", "").strip()
+        for column in dataframe.columns
+    ]
+
+    return dataframe
+
+
+def load_dataset(dataset) -> pd.DataFrame:
+    """Wczytuje oryginalny plik datasetu."""
+    return load_dataset_file(dataset.file.path)
+
+
+def load_prepared_dataset(dataset) -> pd.DataFrame:
+    """Wczytuje przygotowany zbiór lub oryginalny plik."""
+    if dataset.prepared_file:
+        return load_dataset_file(dataset.prepared_file.path)
+
+    return load_dataset(dataset)
+
+
+def get_correlation_matrix(dataset) -> dict:
+    """Zwraca macierz korelacji Pearsona dla kolumn numerycznych."""
+    dataframe = load_prepared_dataset(dataset)
+    numeric = dataframe.select_dtypes(include="number")
+
+    if numeric.empty:
+        raise ValueError(
+            "Zbiór danych nie zawiera kolumn numerycznych."
+        )
+
+    correlation = numeric.corr(method="pearson")
+
+    columns = [str(column) for column in correlation.columns]
+    matrix = [
+        [
+            None if pd.isna(value) else float(value)
+            for value in row
+        ]
+        for row in correlation.to_numpy()
+    ]
+
+    return {
+        "columns": columns,
+        "matrix": matrix,
+    }
+
+
+def get_target_correlations(dataset) -> dict:
+    """Zwraca korelacje Pearsona kolumn numerycznych z targetem."""
+    target = dataset.target_column
+
+    if not target:
+        raise ValueError(
+            "Najpierw wybierz zmienną docelową."
+        )
+
+    dataframe = load_prepared_dataset(dataset)
+
+    if target not in dataframe.columns:
+        raise ValueError(
+            f"Wybrana zmienna docelowa '{target}' "
+            "nie istnieje w aktualnym zbiorze."
+        )
+
+    if not pd.api.types.is_numeric_dtype(dataframe[target]):
+        raise ValueError(
+            "Wybrany target nie jest numeryczny. "
+            "Korelacja Pearsona wymaga zmiennej numerycznej."
+        )
+
+    numeric = dataframe.select_dtypes(include="number")
+    correlation = numeric.corr(method="pearson")[target]
+
+    results = []
+
+    for column, value in correlation.items():
+        if column == target:
+            continue
+
+        results.append({
+            "column": str(column),
+            "correlation": (
+                None if pd.isna(value) else float(value)
+            ),
+        })
+
+    return {
+        "target": target,
+        "method": "pearson",
+        "correlations": results,
+    }

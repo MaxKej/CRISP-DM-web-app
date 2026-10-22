@@ -23,8 +23,25 @@ class Dataset(models.Model):
         max_length=255
     )
 
+    target_column = models.CharField(
+        max_length=255,
+        blank=True,
+        default="",
+    )
+
     file = models.FileField(
         upload_to=dataset_upload_path
+    )
+
+    prepared_file = models.FileField(
+        upload_to="datasets/prepared/",
+        blank=True,
+        null=True,
+    )
+
+    preparation_state = models.JSONField(
+        default=dict,
+        blank=True,
     )
 
     created_at = models.DateTimeField(
