@@ -13,19 +13,24 @@ from .serializers import (
     DatasetColumnTypeSerializer,
     RemoveColumnsSerializer,
     RemoveRowsSerializer,
-    FillMissingValuesSerializer, CreateSyntheticColumnSerializer, TargetColumnSerializer,
+    FillMissingValuesSerializer,
+    CreateSyntheticColumnSerializer,
+    TargetColumnSerializer,
 )
 from .profiling import (
     load_dataset,
     load_prepared_dataset,
-    profile_dataset, get_correlation_matrix, get_target_correlations,
+    profile_dataset,
+    get_correlation_matrix,
+    get_target_correlations,
 )
 from .preparation import (
     remove_columns,
     remove_empty_rows,
     remove_duplicate_rows,
     fill_missing_values,
-    save_prepared_dataset, create_synthetic_column,
+    save_prepared_dataset,
+    create_synthetic_column,
 )
 
 class DatasetListCreateView(generics.ListCreateAPIView):
@@ -146,13 +151,12 @@ class DatasetPreviewView(generics.RetrieveAPIView):
         dataset = self.get_object()
 
         try:
-            dataframe = load_dataset(dataset)
+            dataframe = load_prepared_dataset(dataset)
         except (ValueError, OSError) as exc:
             raise ValidationError(str(exc)) from exc
 
         preview = dataframe.head(10)
 
-        # JSON poprawnie obsługuje braki danych i daty.
         rows = json.loads(
             preview.to_json(
                 orient="records",
@@ -197,7 +201,7 @@ class DatasetColumnTypeDetailView(generics.GenericAPIView):
         column_name = self.kwargs["column_name"]
 
         try:
-            dataframe = load_dataset(dataset)
+            dataframe = load_prepared_dataset(dataset)
         except (ValueError, OSError) as exc:
             raise ValidationError(str(exc)) from exc
 
@@ -471,6 +475,17 @@ class DatasetCreateSyntheticColumnView(APIView):
 
 
 class DatasetTargetView(APIView):
+    def get(self, request, pk):
+        dataset = generics.get_object_or_404(
+            Dataset.objects.filter(project__owner=request.user),
+            pk=pk,
+        )
+
+        return Response({
+            "dataset_id": dataset.id,
+            "target_column": dataset.target_column or None,
+        })
+
     def put(self, request, pk):
         dataset = generics.get_object_or_404(
             Dataset.objects.filter(project__owner=request.user),
@@ -479,6 +494,7 @@ class DatasetTargetView(APIView):
 
         serializer = TargetColumnSerializer(data=request.data)
         serializer.is_valid(raise_exception=True)
+
         target = serializer.validated_data["target_column"]
 
         if target:
@@ -489,15 +505,11 @@ class DatasetTargetView(APIView):
 
             if target not in dataframe.columns:
                 raise ValidationError({
-                    "target_column": (
-                        f"Nie znaleziono kolumny '{target}'."
-                    )
+                    "target_column": f"Nie znaleziono kolumny '{target}'."
                 })
 
         dataset.target_column = target
-        dataset.save(
-            update_fields=["target_column", "updated_at"]
-        )
+        dataset.save(update_fields=["target_column", "updated_at"])
 
         return Response({
             "dataset_id": dataset.id,

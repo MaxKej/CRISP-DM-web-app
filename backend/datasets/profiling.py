@@ -2,6 +2,7 @@ from pathlib import Path
 from typing import Any
 
 import pandas as pd
+import math
 
 from .models import DatasetColumnType
 
@@ -42,7 +43,7 @@ def load_dataset(dataset) -> pd.DataFrame:
 def profile_dataset(dataset) -> dict[str, Any]:
     """Zwraca podstawowe informacje i statystyki datasetu."""
 
-    dataframe = load_dataset(dataset)
+    dataframe = load_prepared_dataset(dataset)
 
     # Pobieramy ręcznie ustawione typy dla tego zbioru.
     saved_types = {
@@ -220,25 +221,168 @@ def load_prepared_dataset(dataset) -> pd.DataFrame:
 
 
 def get_correlation_matrix(dataset) -> dict:
-    """Zwraca macierz korelacji Pearsona dla kolumn numerycznych."""
-    dataframe = load_prepared_dataset(dataset)
-    numeric = dataframe.select_dtypes(include="number")
+    """Zwraca macierz zależności dla zmiennych ilościowych i jakościowych."""
 
-    if numeric.empty:
-        raise ValueError(
-            "Zbiór danych nie zawiera kolumn numerycznych."
+    dataframe = load_prepared_dataset(dataset)
+
+    if dataframe.empty or len(dataframe.columns) == 0:
+        raise ValueError("Zbiór danych jest pusty.")
+
+    saved_types = {
+        item.column_name: item.semantic_type
+        for item in DatasetColumnType.objects.filter(dataset=dataset)
+        if item.column_name in dataframe.columns
+    }
+
+    columns = [str(column) for column in dataframe.columns]
+
+    semantic_types = {}
+
+    for column in dataframe.columns:
+        semantic_types[str(column)] = saved_types.get(
+            str(column),
+            (
+                "quantitative"
+                if pd.api.types.is_numeric_dtype(dataframe[column])
+                else "qualitative"
+            ),
         )
 
-    correlation = numeric.corr(method="pearson")
+    def cramers_v(left: pd.Series, right: pd.Series):
+        """Oblicza współczynnik V Craméra dla dwóch zmiennych jakościowych."""
 
-    columns = [str(column) for column in correlation.columns]
-    matrix = [
-        [
-            None if pd.isna(value) else float(value)
-            for value in row
-        ]
-        for row in correlation.to_numpy()
-    ]
+        valid = pd.DataFrame({
+            "left": left,
+            "right": right,
+        }).dropna()
+
+        if len(valid) < 2:
+            return None
+
+        table = pd.crosstab(valid["left"], valid["right"])
+
+        rows, columns_count = table.shape
+
+        if rows < 2 or columns_count < 2:
+            return None
+
+        n = table.to_numpy().sum()
+
+        row_totals = table.sum(axis=1)
+        column_totals = table.sum(axis=0)
+
+        chi_square = 0.0
+
+        for i in range(rows):
+            for j in range(columns_count):
+                expected = (
+                    row_totals.iloc[i] * column_totals.iloc[j] / n
+                )
+
+                if expected > 0:
+                    observed = table.iloc[i, j]
+                    chi_square += (observed - expected) ** 2 / expected
+
+        denominator = n * min(rows - 1, columns_count - 1)
+
+        if denominator == 0:
+            return None
+
+        return math.sqrt(chi_square / denominator)
+
+    def correlation_ratio(
+        qualitative: pd.Series,
+        quantitative: pd.Series,
+    ):
+        """Oblicza współczynnik eta dla zmiennej jakościowej i ilościowej."""
+
+        values = pd.DataFrame({
+            "category": qualitative,
+            "value": pd.to_numeric(quantitative, errors="coerce"),
+        }).dropna()
+
+        if len(values) < 2:
+            return None
+
+        grand_mean = values["value"].mean()
+
+        total_sum = (
+            (values["value"] - grand_mean) ** 2
+        ).sum()
+
+        if total_sum == 0:
+            return None
+
+        between_sum = 0.0
+
+        for _, group in values.groupby("category", observed=True):
+            between_sum += (
+                len(group) * (group["value"].mean() - grand_mean) ** 2
+            )
+
+        return math.sqrt(between_sum / total_sum)
+
+    matrix = []
+
+    for left_column in dataframe.columns:
+        row = []
+
+        for right_column in dataframe.columns:
+
+            if left_column == right_column:
+                value = 1.0
+
+            else:
+                left_type = semantic_types[str(left_column)]
+                right_type = semantic_types[str(right_column)]
+
+                left = dataframe[left_column]
+                right = dataframe[right_column]
+
+                if (
+                    left_type == "quantitative"
+                    and right_type == "quantitative"
+                ):
+                    left_numeric = pd.to_numeric(left, errors="coerce")
+                    right_numeric = pd.to_numeric(right, errors="coerce")
+
+                    valid = pd.DataFrame({
+                        "left": left_numeric,
+                        "right": right_numeric,
+                    }).dropna()
+
+                    if len(valid) < 2:
+                        value = None
+                    else:
+                        correlation = valid["left"].corr(
+                            valid["right"],
+                            method="pearson",
+                        )
+
+                        value = (
+                            None
+                            if pd.isna(correlation)
+                            else float(correlation)
+                        )
+
+                elif (
+                    left_type == "qualitative"
+                    and right_type == "qualitative"
+                ):
+                    value = cramers_v(left, right)
+
+                elif left_type == "qualitative":
+                    value = correlation_ratio(left, right)
+
+                else:
+                    value = correlation_ratio(right, left)
+
+                if value is not None:
+                    value = float(value)
+
+            row.append(value)
+
+        matrix.append(row)
 
     return {
         "columns": columns,
@@ -247,46 +391,159 @@ def get_correlation_matrix(dataset) -> dict:
 
 
 def get_target_correlations(dataset) -> dict:
-    """Zwraca korelacje Pearsona kolumn numerycznych z targetem."""
-    target = dataset.target_column
-
-    if not target:
-        raise ValueError(
-            "Najpierw wybierz zmienną docelową."
-        )
+    """Oblicza zależności między zmienną celu a pozostałymi kolumnami."""
 
     dataframe = load_prepared_dataset(dataset)
 
-    if target not in dataframe.columns:
-        raise ValueError(
-            f"Wybrana zmienna docelowa '{target}' "
-            "nie istnieje w aktualnym zbiorze."
+    target_column = dataset.target_column
+
+    if not target_column:
+        raise ValueError("Nie wybrano zmiennej celu.")
+
+    if target_column not in dataframe.columns:
+        raise ValueError("Wybrana zmienna celu nie istnieje w zbiorze danych.")
+
+    saved_types = {
+        item.column_name: item.semantic_type
+        for item in DatasetColumnType.objects.filter(dataset=dataset)
+        if item.column_name in dataframe.columns
+    }
+
+    def get_semantic_type(column):
+        return saved_types.get(
+            str(column),
+            (
+                "quantitative"
+                if pd.api.types.is_numeric_dtype(dataframe[column])
+                else "qualitative"
+            ),
         )
 
-    if not pd.api.types.is_numeric_dtype(dataframe[target]):
-        raise ValueError(
-            "Wybrany target nie jest numeryczny. "
-            "Korelacja Pearsona wymaga zmiennej numerycznej."
-        )
+    def cramers_v(left, right):
+        valid = pd.DataFrame({
+            "left": left,
+            "right": right,
+        }).dropna()
 
-    numeric = dataframe.select_dtypes(include="number")
-    correlation = numeric.corr(method="pearson")[target]
+        if len(valid) < 2:
+            return None
 
-    results = []
+        table = pd.crosstab(valid["left"], valid["right"])
 
-    for column, value in correlation.items():
-        if column == target:
+        rows, columns = table.shape
+
+        if rows < 2 or columns < 2:
+            return None
+
+        n = table.to_numpy().sum()
+
+        row_totals = table.sum(axis=1)
+        column_totals = table.sum(axis=0)
+
+        chi_square = 0.0
+
+        for i in range(rows):
+            for j in range(columns):
+                expected = (
+                    row_totals.iloc[i] * column_totals.iloc[j] / n
+                )
+
+                if expected > 0:
+                    observed = table.iloc[i, j]
+                    chi_square += (observed - expected) ** 2 / expected
+
+        denominator = n * min(rows - 1, columns - 1)
+
+        if denominator == 0:
+            return None
+
+        return math.sqrt(chi_square / denominator)
+
+    def correlation_ratio(qualitative, quantitative):
+        values = pd.DataFrame({
+            "category": qualitative,
+            "value": pd.to_numeric(quantitative, errors="coerce"),
+        }).dropna()
+
+        if len(values) < 2:
+            return None
+
+        grand_mean = values["value"].mean()
+
+        total_sum = (
+            (values["value"] - grand_mean) ** 2
+        ).sum()
+
+        if total_sum == 0:
+            return None
+
+        between_sum = 0.0
+
+        for _, group in values.groupby("category", observed=True):
+            between_sum += (
+                len(group) * (group["value"].mean() - grand_mean) ** 2
+            )
+
+        return math.sqrt(between_sum / total_sum)
+
+    target = dataframe[target_column]
+    target_type = get_semantic_type(target_column)
+
+    correlations = []
+
+    for column in dataframe.columns:
+        if column == target_column:
             continue
 
-        results.append({
+        column_type = get_semantic_type(column)
+        feature = dataframe[column]
+
+        value = None
+        method = None
+
+        # Ilościowa – ilościowa
+        if target_type == "quantitative" and column_type == "quantitative":
+            valid = pd.DataFrame({
+                "target": pd.to_numeric(target, errors="coerce"),
+                "feature": pd.to_numeric(feature, errors="coerce"),
+            }).dropna()
+
+            if len(valid) >= 2:
+                correlation = valid["target"].corr(
+                    valid["feature"],
+                    method="pearson",
+                )
+
+                if pd.notna(correlation):
+                    value = float(correlation)
+
+            method = "pearson"
+
+        # Jakościowa – jakościowa
+        elif target_type == "qualitative" and column_type == "qualitative":
+            value = cramers_v(target, feature)
+            method = "cramers_v"
+
+        # Ilościowa – jakościowa
+        else:
+            if target_type == "qualitative":
+                value = correlation_ratio(target, feature)
+            else:
+                value = correlation_ratio(feature, target)
+
+            method = "correlation_ratio"
+
+        correlations.append({
             "column": str(column),
             "correlation": (
-                None if pd.isna(value) else float(value)
+                None if value is None else float(value)
             ),
+            "method": method,
         })
 
     return {
-        "target": target,
-        "method": "pearson",
-        "correlations": results,
+        "target": str(target_column),
+        "target_type": target_type,
+        "method": "mixed",
+        "correlations": correlations,
     }

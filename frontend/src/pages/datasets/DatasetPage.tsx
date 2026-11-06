@@ -1,3 +1,4 @@
+
 import { useEffect, useState } from "react";
 import { Link, useParams } from "react-router-dom";
 
@@ -6,11 +7,16 @@ import MissingValuesChart from "../../components/datasets/MissingValuesChart";
 import DistributionChart from "../../components/datasets/DistributionChart";
 import ColumnTypeSelector from "../../components/datasets/ColumnTypeSelector";
 import BoxplotChart from "../../components/datasets/BoxplotChart";
+import CorrelationHeatmap from "../../components/datasets/CorrelationHeatmap";
+import TargetCorrelationChart from "../../components/datasets/TargetCorrelationChart";
+import DataPreparation from "../../components/datasets/DataPreparation";
 
 import {
   getDatasetProfile,
   getDatasetPreview,
   getDatasetColumnTypes,
+  getDatasetTarget,
+  updateDatasetTarget,
 } from "../../api/datasets";
 
 import type {
@@ -40,6 +46,9 @@ const DatasetPage = () => {
     Record<string, SemanticType>
   >({});
 
+  const [targetColumn, setTargetColumn] = useState<string>("");
+  const [isSavingTarget, setIsSavingTarget] = useState(false);
+
   const [activeStage, setActiveStage] =
     useState<Stage>("understanding");
 
@@ -55,26 +64,28 @@ const DatasetPage = () => {
       setProfile(null);
       setPreview(null);
       setTypeOverrides({});
+      setTargetColumn("");
 
       const id = Number(datasetId);
 
-      if (
-        !datasetId ||
-        !Number.isInteger(id) ||
-        id <= 0
-      ) {
+      if (!datasetId || !Number.isInteger(id) || id <= 0) {
         setDataError("Nieprawidłowy identyfikator datasetu.");
         setIsLoading(false);
         return;
       }
 
       try {
-        const [profileData, previewData, savedTypes] =
-          await Promise.all([
-            getDatasetProfile(id),
-            getDatasetPreview(id),
-            getDatasetColumnTypes(id),
-          ]);
+        const [
+          profileData,
+          previewData,
+          savedTypes,
+          savedTarget,
+        ] = await Promise.all([
+          getDatasetProfile(id),
+          getDatasetPreview(id),
+          getDatasetColumnTypes(id),
+          getDatasetTarget(id),
+        ]);
 
         if (cancelled) {
           return;
@@ -86,7 +97,6 @@ const DatasetPage = () => {
           overrides[item.column_name] = item.semantic_type;
         });
 
-        // Stosujemy zapisane typy również po ponownym otwarciu strony.
         const updatedProfile: DatasetProfile = {
           ...profileData,
           columns: profileData.columns.map((column) => ({
@@ -99,10 +109,11 @@ const DatasetPage = () => {
         setProfile(updatedProfile);
         setPreview(previewData);
         setTypeOverrides(overrides);
+        setTargetColumn(savedTarget.target_column ?? "");
       } catch {
         if (!cancelled) {
           setDataError(
-            "Nie udało się pobrać profilu, podglądu lub typów kolumn.",
+            "Nie udało się pobrać profilu, podglądu, typów kolumn lub zmiennej docelowej.",
           );
 
           showNotification(
@@ -150,6 +161,37 @@ const DatasetPage = () => {
       "Zapisano typ analityczny kolumny.",
       "success",
     );
+  };
+
+  const handleTargetChange = async (value: string) => {
+    if (isSavingTarget) {
+      return;
+    }
+
+    setIsSavingTarget(true);
+
+    try {
+      const result = await updateDatasetTarget(
+        Number(datasetId),
+        value,
+      );
+
+      setTargetColumn(result.target_column ?? "");
+
+      showNotification(
+        value
+          ? "Zapisano zmienną docelową."
+          : "Usunięto wybór zmiennej docelowej.",
+        "success",
+      );
+    } catch {
+      showNotification(
+        "Nie udało się zapisać zmiennej docelowej.",
+        "error",
+      );
+    } finally {
+      setIsSavingTarget(false);
+    }
   };
 
   const stages: { id: Stage; label: string }[] = [
@@ -239,6 +281,60 @@ const DatasetPage = () => {
                   Podstawowe informacje o danych znajdujących się
                   w datasecie.
                 </p>
+
+                {/* Wybór zmiennej docelowej */}
+                <div className="mt-6 rounded-lg border bg-gray-50 p-5">
+                  <h3 className="text-lg font-semibold text-gray-900">
+                    Zmienna docelowa
+                  </h3>
+
+                  <p className="mt-1 text-sm text-gray-500">
+                    Wybierz kolumnę, której wartości będą przewidywane
+                    podczas późniejszego modelowania.
+                  </p>
+
+                  <div className="mt-4 flex flex-col gap-2 sm:max-w-md">
+                    <label
+                      htmlFor="target-column"
+                      className="text-sm font-medium text-gray-700"
+                    >
+                      Kolumna docelowa
+                    </label>
+
+                    <select
+                      id="target-column"
+                      value={targetColumn}
+                      onChange={(event) =>
+                        void handleTargetChange(event.target.value)
+                      }
+                      disabled={isSavingTarget}
+                      className="rounded-md border border-gray-300 bg-white px-3 py-2 text-sm text-gray-900 focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500 disabled:cursor-not-allowed disabled:bg-gray-100"
+                    >
+                      <option value="">Nie wybrano</option>
+
+                      {profile.columns.map((column) => (
+                        <option
+                          key={column.name}
+                          value={column.name}
+                        >
+                          {column.name}
+                        </option>
+                      ))}
+                    </select>
+
+                    {isSavingTarget && (
+                      <p className="text-sm text-gray-500">
+                        Zapisywanie wyboru...
+                      </p>
+                    )}
+
+                    {!isSavingTarget && targetColumn && (
+                      <p className="text-sm text-green-700">
+                        Wybrana zmienna: {targetColumn}
+                      </p>
+                    )}
+                  </div>
+                </div>
 
                 {/* Podstawowe informacje o zbiorze */}
                 <div className="mt-6 grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
@@ -473,9 +569,7 @@ const DatasetPage = () => {
                                       <ul className="mt-2 space-y-1">
                                         {column.statistics.top_values.map(
                                           (item, index) => (
-                                            <li
-                                              key={`${item.value}-${index}`}
-                                            >
+                                            <li key={`${item.value}-${index}`}>
                                               {item.value}: {item.count}
                                             </li>
                                           ),
@@ -505,26 +599,36 @@ const DatasetPage = () => {
                     columns={profile.columns}
                   />
                 </div>
-                {/* Wykres pudełkowy — wykrywanie wartości odstających */}
+
+                {/* Wykres pudełkowy */}
                 <div className="mt-8">
                   <BoxplotChart
                     datasetId={Number(datasetId)}
                     columns={profile.columns}
                   />
                 </div>
+
+                {/* Heatmapa korelacji */}
+                <div className="mt-8">
+                  <CorrelationHeatmap
+                    datasetId={Number(datasetId)}
+                  />
+                </div>
+
+                {/* Korelacja zmiennych z targetem */}
+                {targetColumn && (
+                  <div className="mt-8">
+                    <TargetCorrelationChart
+                      datasetId={Number(datasetId)}
+                      targetColumn={targetColumn}
+                    />
+                  </div>
+                )}
               </section>
             )}
 
             {activeStage === "preparation" && (
-              <section>
-                <h2 className="text-xl font-semibold">
-                  Data Preparation
-                </h2>
-                <p className="mt-2 text-gray-600">
-                  Przygotowanie danych będzie dostępne w kolejnym
-                  etapie implementacji.
-                </p>
-              </section>
+              <DataPreparation datasetId={Number(datasetId)} />
             )}
 
             {activeStage === "modeling" && (
