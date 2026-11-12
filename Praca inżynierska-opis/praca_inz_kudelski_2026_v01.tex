@@ -357,18 +357,24 @@ Dodatkowo wykorzystano framework Django REST Framework służący do budowy inte
 W projekcie zastosowano następujące biblioteki:
 
 \begin{itemize}
-\item asgiref 3.11.1 -- obsługa standardu ASGI,
-\item Django 6.0.3 -- główny framework aplikacji,
-\item sqlparse 0.5.5 -- parser składni SQL wykorzystywany przez Django,
-\item Django REST Framework -- implementacja usług REST API,
-\item psycopg2-binary -- komunikacja z bazą PostgreSQL,
-\item django-filter -- filtrowanie danych zwracanych przez API,
-\item python-decouple -- zarządzanie zmiennymi środowiskowymi,
-\item dj-database-url -- konfiguracja połączeń bazodanowych,
-\item django-simple-history -- przechowywanie historii zmian danych,
-\item gunicorn -- serwer aplikacyjny dla środowiska produkcyjnego,
-\item pytest -- framework testowy,
-\item pytest-django -- rozszerzenie testów dla aplikacji Django.
+    \item asgiref 3.12.1 -- obsługa standardu ASGI,
+    \item Django 6.1.1 -- główny framework aplikacji,
+    \item djangorestframework 3.18.1 -- implementacja usług REST API,
+    \item django-filter 26.1 -- filtrowanie danych zwracanych przez API,
+    \item psycopg2-binary 2.9.13 -- komunikacja z bazą danych PostgreSQL,
+    \item python-decouple 3.8 -- zarządzanie zmiennymi środowiskowymi,
+    \item dj-database-url 3.1.2 -- konfiguracja połączeń z bazą danych na podstawie adresu URL,
+    \item django-simple-history 3.13.0 -- przechowywanie historii zmian danych,
+    \item sqlparse 0.6.0 -- parser składni SQL wykorzystywany przez Django,
+    \item gunicorn 26.2.0 -- serwer aplikacyjny wykorzystywany w środowisku produkcyjnym,
+    \item pytest 9.1.1 -- framework testowy,
+    \item pytest-django 4.14.0 -- rozszerzenie umożliwiające testowanie aplikacji Django,
+    \item django-cors-headers 4.9.0 -- obsługa mechanizmu CORS, umożliwiającego komunikację frontend-backend,
+    \item djangorestframework-simplejwt 5.5.1 -- obsługa uwierzytelniania użytkowników z wykorzystaniem tokenów JWT,
+    \item pandas 3.0.6 -- przetwarzanie i analiza danych tabelarycznych,
+    \item openpyxl 3.1.5 -- odczyt i zapis plików arkuszy kalkulacyjnych XLSX,
+    \item xlrd 2.0.2 -- odczyt plików arkuszy kalkulacyjnych XLS,
+    \item odfpy 1.4.1 -- obsługa plików arkuszy kalkulacyjnych w formacie ODS.
 \end{itemize}
 
 \section{Frontend}
@@ -442,32 +448,39 @@ wyników do wizualizacji oraz obsługę żądań wysyłanych przez
 frontend.
 
 \begin{itemize}
+
 	\item \texttt{profiling.py} -- odpowiada za profilowanie
-    zbioru danych, w tym analizę brakujących wartości,
-    wyznaczanie podstawowych statystyk oraz określanie
-    analitycznego typu zmiennych.
+	zbioru danych, w tym analizę brakujących wartości,
+	wyznaczanie podstawowych statystyk, określanie analitycznego
+	typu zmiennych oraz obliczanie zależności pomiędzy zmienną
+	docelową a pozostałymi kolumnami.
+
 	\item \texttt{charts.py} -- przygotowuje dane wykorzystywane
     do prezentacji rozkładów zmiennych na histogramach lub
     wykresach słupkowych.
+
 	\item \texttt{quality.py} -- przygotowuje dane niezbędne
     do przedstawienia wykresu pudełkowego, który umożliwia
     analizę rozkładu wartości liczbowych i wskazanie
     potencjalnych wartości odstających.
+
 	\item \texttt{serializers.py} -- obsługuje walidację
     i przekazywanie danych związanych ze zmianą typu
     analitycznego kolumny przez użytkownika.
+
 	\item \texttt{views.py} -- udostępnia endpointy API
     umożliwiające pobieranie wyników profilowania i danych
     do wizualizacji oraz obsługę zmiany typu kolumny.
+
 \end{itemize}
 
 Profilowanie rozpoczyna się od analizy typów danych
 rozpoznanych podczas wczytywania zbioru. Na ich podstawie
-określany jest typ analityczny zmiennej, np. jakościowy
-lub ilościowy. Automatyczna klasyfikacja stanowi punkt
-wyjścia do dalszej analizy, ale może wymagać korekty
-w przypadku danych, których typ techniczny nie odzwierciedla
-ich rzeczywistego znaczenia.
+określany jest typ analityczny zmiennej, np. jakościowy lub ilościowy.
+Automatyczna klasyfikacja stanowi punkt wyjścia do dalszej analizy,
+ale może wymagać korekty w przypadku danych, których typ techniczny
+nie odzwierciedla ich rzeczywistego znaczenia. Użytkownik ma zatem
+możliwość ręcznej zmiany typu analitycznego wybranej kolumny.
 
 Backend nie odpowiada za bezpośrednie rysowanie wykresów.
 Przygotowuje odpowiednie zestawy danych i przekazuje je
@@ -499,6 +512,17 @@ Najważniejsze komponenty i moduły tej części aplikacji to:
     pudełkowego, ułatwiającego analizę rozkładu wartości
     oraz identyfikację potencjalnych obserwacji odstających.
 
+	\item \texttt{CorrelationHeatmap} -- przedstawia zależności
+	pomiędzy zmiennymi w postaci mapy cieplnej.	Poszczególne komórki
+	reprezentują wartości współczynników korelacji,
+	a ich kolorystyka ułatwia porównywanie siły zależności 
+	pomiędzy parami kolumn.
+
+	\item \texttt{TargetCorrelationChart} -- prezentuje zależności
+	pomiędzy wybraną zmienną docelową a pozostałymi kolumnami.
+	Wyniki przedstawiane są na wykresie słupkowym,
+	co pozwala łatwo porównać siłę poszczególnych zależności.
+
     \item \texttt{DatasetPage} -- stanowi główny widok etapu
     Data Understanding. Integruje wymienione komponenty,
     prezentuje podgląd pierwszych dziesięciu wierszy zbioru
@@ -518,10 +542,18 @@ natomiast frontend przedstawia je w formie tabel, statystyk
 i wykresów oraz udostępnia użytkownikowi interakcje
 związane z analizowanym zbiorem.
 
+Istotnym elementem interfejsu jest możliwość wskazania zmiennej docelowej,
+względem której wykonywana jest dodatkowa analiza zależności.
+Użytkownik może wybrać jedną z kolumn zbioru danych,
+a aplikacja przedstawia jej zależności z pozostałymi zmiennymi.
+Zastosowanie różnych metod obliczania korelacji pozwala analizować
+również zbiory zawierające zarówno dane ilościowe, jak i jakościowe.
+
 Komponent \texttt{ColumnTypeSelector} umożliwia korektę
 automatycznie określonego typu analitycznego zmiennej.
 Jest to istotne w sytuacjach, w których typ techniczny kolumny
-nie odzwierciedla jej znaczenia lub planowanego zastosowania w dalszej analizie.
+nie odzwierciedla jej znaczenia lub planowanego zastosowania
+w dalszej analizie.
 
 Przykładem może być zmiana typu zmiennej docelowej z jakościowego na ilościowy,
 jeżeli analizowany problem wymaga przewidywania wartości liczbowych zamiast
@@ -531,9 +563,116 @@ Przykładowo, kody kategorii zapisane jako liczby nie powinny być
 automatycznie interpretowane jako wielkości, dla których sensowne
 jest wykonywanie działań arytmetycznych.
 
-Możliwość ręcznej korekty typu analitycznego pozwala użytkownikowi uwzględnić
-znaczenie badanej zmiennej, a nie tylko jej techniczną reprezentację.
-Informacja ta może być następnie wykorzystana w kolejnych etapach procesu CRISP-DM.
+Możliwość ręcznej korekty typu analitycznego zmiennej oraz wskazania zmiennej docelowej
+pozwala uwzględnić znaczenie badanych danych i charakter analizowanego problemu.
+Informacje uzyskane podczas tego etapu mogą być następnie wykorzystane w kolejnych etapach
+procesu CRISP-DM, w szczególności podczas przygotowania danych i budowania modeli.
+
+\section{Data Preparation}
+
+Etap Data Preparation w metodologii CRISP-DM odpowiada za
+przygotowanie zbioru danych do dalszej analizy i budowania modeli.
+Jego celem jest poprawa jakości danych poprzez usunięcie lub
+odpowiednie przekształcenie elementów, które mogą utrudniać
+późniejsze przetwarzanie. W aplikacji etap ten obejmuje operacje
+związane z usuwaniem niepotrzebnych kolumn, eliminacją pustych
+wierszy i zduplikowanych obserwacji, uzupełnianiem brakujących
+wartości oraz tworzeniem nowych zmiennych na podstawie
+istniejących danych.
+
+Implementacja została podzielona na część backendową
+odpowiedzialną za wykonywanie operacji na zbiorze danych oraz
+część frontendową umożliwiającą użytkownikowi wybór odpowiednich
+działań i prezentację ich rezultatów.
+
+\subsection{Backend}
+
+Część backendowa etapu Data Preparation składa się z modułów
+Python odpowiedzialnych za wykonywanie operacji przygotowania
+danych, walidację parametrów przekazywanych przez użytkownika
+oraz zapisywanie wyników przetwarzania.
+
+\begin{itemize}
+
+	\item \texttt{preparation.py} -- odpowiada za operacje
+	przygotowania danych, w tym usuwanie kolumn, pustych wierszy
+	i duplikatów, uzupełnianie brakujących wartości oraz tworzenie
+	kolumn syntetycznych.
+
+	\item \texttt{serializers.py} -- odpowiada za walidację
+	danych przekazywanych przez frontend, w szczególności
+	parametrów wymaganych do wykonania wybranych operacji
+	przygotowania zbioru.
+
+	\item \texttt{views.py} -- udostępnia endpointy API
+	obsługujące funkcje z \texttt{preparation.py}.
+
+\end{itemize}
+
+Operacje przygotowania danych wykonywane są z wykorzystaniem biblioteki Pandas.
+Po wczytaniu zbioru danych backend wykonuje wskazaną przez użytkownika operację,
+a następnie zapisuje jej rezultat w postaci przygotowanego zbioru danych.
+Pozwala to zachować wyniki wprowadzonych zmian i wykorzystać je podczas
+kolejnych etapów procesu CRISP-DM.
+
+Backend nie odpowiada za bezpośrednią prezentację interfejsu ani wybór operacji
+przez użytkownika. Udostępnia odpowiednie endpointy API, wykonuje przekazane działania
+i zwraca informacje o ich rezultacie. Oddzielenie logiki przetwarzania danych
+od interfejsu pozwala zachować spójny sposób obsługi operacji przygotowania zbioru.
+
+\subsection{Frontend}
+
+Frontend etapu Data Preparation odpowiada za udostępnienie użytkownikowi
+operacji modyfikujących zbiór danych oraz prezentację informacji związanych
+z jego przygotowaniem.
+
+Głównym elementem tej części aplikacji jest widok DatasetPage,
+który integruje funkcjonalności poszczególnych etapów pracy ze zbiorem danych.
+W ramach etapu Data Preparation interfejs umożliwia wybór operacji, wskazanie kolumn
+lub parametrów wymaganych do jej wykonania oraz przesłanie odpowiedniego żądania do backendu.
+
+Dostępne operacje obejmują:
+
+\begin{itemize}
+
+    \item \textbf{Usuwanie kolumn} -- umożliwia wskazanie zmiennych,
+    które nie powinny być uwzględniane w dalszym przetwarzaniu.
+
+    \item \textbf{Usuwanie pustych wierszy} -- pozwala eliminować
+    obserwacje niezawierające danych.
+
+    \item \textbf{Usuwanie duplikatów} -- umożliwia usunięcie
+    powtarzających się rekordów ze zbioru.
+
+    \item \textbf{Uzupełnianie brakujących wartości} -- pozwala wybrać
+    kolumnę oraz metodę zastępowania brakujących danych.
+
+    \item \textbf{Tworzenie kolumn syntetycznych} -- umożliwia dodanie
+    nowych zmiennych wyznaczanych na podstawie istniejących kolumn.
+
+\end{itemize}
+
+Interfejs przekazuje wybrane przez użytkownika parametry do backendu za pośrednictwem API.
+Po wykonaniu operacji prezentowany jest zaktualizowany stan zbioru danych,
+dzięki czemu użytkownik może ocenić rezultat wprowadzonych zmian i kontynuować
+jego przygotowanie.
+
+Istotnym założeniem etapu Data Preparation jest pozostawienie użytkownikowi
+kontroli nad sposobem modyfikowania danych. Aplikacja nie narzuca automatycznie
+wszystkich działań, lecz udostępnia zestaw operacji, które można dobrać do charakteru
+analizowanego zbioru. Ma to znaczenie szczególnie w przypadku brakujących wartości,
+ponieważ zastosowanie niewłaściwej metody ich uzupełniania może prowadzić
+do zniekształcenia informacji zawartych w danych.
+
+Podział odpowiedzialności pomiędzy backendem a frontendem pozwala
+oddzielić wykonywanie operacji przetwarzania od sposobu ich wyboru i prezentacji.
+Backend odpowiada za modyfikację oraz zapis zbioru danych, natomiast frontend
+udostępnia użytkownikowi odpowiednie funkcjonalności i prezentuje rezultaty
+przeprowadzonych działań.
+
+Wyniki etapu Data Preparation stanowią przygotowaną wersję zbioru danych,
+która może zostać wykorzystana w kolejnych etapach metodologii CRISP-DM,
+przede wszystkim podczas budowania modeli.
 % \section{Struktura stworzonego systemu}
 
 % \begin{figure}[h] % w [] podajemy miejsce umieszczenia rysunku

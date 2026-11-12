@@ -1,4 +1,4 @@
-This is pdfTeX, Version 3.141592653-2.6-1.40.28 (MiKTeX 25.12) (preloaded format=pdflatex 2026.6.11)  18 OCT 2026 21:57
+This is pdfTeX, Version 3.141592653-2.6-1.40.28 (MiKTeX 25.12) (preloaded format=pdflatex 2026.6.11)  13 NOV 2026 00:09
 entering extended mode
  restricted \write18 enabled.
  file:line:error style messages enabled.
@@ -295,11 +295,10 @@ File: umsb.fd 2013/01/14 v3.01 AMS symbols B
 
 {C:/Users/4maxk/AppData/Local/MiKTeX/fonts/map/pdftex/pdftex.map}] [2
 
-] (praca_inz_kudelski_2026_v01.toc)
+] (praca_inz_kudelski_2026_v01.toc [3])
 \tf@toc=\write4
 \openout4 = `praca_inz_kudelski_2026_v01.toc'.
 
- [3]
 Package babel Info: 'polish' activates 'polish' shorthands.
 (babel)             Reported on input line 137.
  [4] [5
@@ -319,48 +318,53 @@ Rozdzia\l  3.
 [13] [14] [15] [16]
 Rozdzia\l  4.
 
-Overfull \hbox (3.33426pt too wide) in paragraph at lines 423--431
+Overfull \hbox (3.33426pt too wide) in paragraph at lines 429--437
 \T1/cmr/m/n/12 przed-sta-wie-nie u»yt-kow-ni-kowi pod-sta-wo-wych in-for-ma-cji o da-nych, które mog¡
  []
 
 [17
 
-] [18]
-Overfull \hbox (0.76976pt too wide) in paragraph at lines 521--525
+] [18] [19]
+Overfull \hbox (0.76976pt too wide) in paragraph at lines 552--557
 []\T1/cmr/m/n/12 Komponent \T1/cmtt/m/n/12 ColumnTypeSelector \T1/cmr/m/n/12 umo»-li-wia ko-rekt¦ au-to-ma-tycz-nie okre-
  []
 
-[19] [20]
+[20]
+Overfull \hbox (34.26933pt too wide) in paragraph at lines 607--609
+[]\T1/cmtt/m/n/12 views.py \T1/cmr/m/n/12 -- udo-st¦p-nia end-po-inty API ob-sªu-gu-j¡ce funk-cje z \T1/cmtt/m/n/12 preparation.py\T1/cmr/m/n/12 . 
+ []
+
+[21] [22] [23] [24
+
+]
 Rozdzia\l  5.
 
-LaTeX Warning: Reference `listing-1' on page 21 undefined on input line 625.
+LaTeX Warning: Reference `listing-1' on page 25 undefined on input line 764.
 
 
-LaTeX Warning: Reference `figure-2' on page 21 undefined on input line 625.
+LaTeX Warning: Reference `figure-2' on page 25 undefined on input line 764.
 
-[21
-
-] [22
+[25] [26
 
 ] (praca_inz_kudelski_2026_v01.lof)
 \tf@lof=\write5
 \openout5 = `praca_inz_kudelski_2026_v01.lof'.
 
- [23] [24
+ [27] [28
 
 ] (praca_inz_kudelski_2026_v01.lot)
 \tf@lot=\write6
 \openout6 = `praca_inz_kudelski_2026_v01.lot'.
 
- [25] [26
+ [29] [30
 
 ] (praca_inz_kudelski_2026_v01.locode)
 \tf@locode=\write7
 \openout7 = `praca_inz_kudelski_2026_v01.locode'.
 
- [27] [28
+ [31] [32
 
-] [29] (praca_inz_kudelski_2026_v01.ind) (praca_inz_kudelski_2026_v01.aux)
+] [33] (praca_inz_kudelski_2026_v01.ind) (praca_inz_kudelski_2026_v01.aux)
  ***********
 LaTeX2e <2025-11-01>
 L3 programming layer <2025-12-24>
@@ -373,15 +377,15 @@ LaTeX Warning: There were undefined references.
 Here is how much of TeX's memory you used:
  7496 strings out of 467871
  121685 string characters out of 5418376
- 531047 words of memory out of 5000000
+ 532047 words of memory out of 5000000
  36287 multiletter control sequences out of 15000+600000
  643784 words of font info for 78 fonts, out of 8000000 for 9000
  1141 hyphenation exceptions out of 8191
  57i,10n,65p,876b,355s stack positions out of 10000i,1000n,20000p,200000b,200000s
  <C:\Users\4maxk\AppData\Local\MiKTeX\fonts/pk/ljfour/jknappen/ec/dpi600\tcrm1200.pk> <C:\Users\4maxk\AppData\Local\MiKTeX\fonts/pk/ljfour/jknappen/ec/dpi600\ecbx1440.pk> <C:\Users\4maxk\AppData\Local\MiKTeX\fonts/pk/ljfour/jknappen/ec/dpi600\ecbx1728.pk> <C:\Users\4maxk\AppData\Local\MiKTeX\fonts/pk/ljfour/jknappen/ec/dpi600\ecrm1095.pk> <C:\Users\4maxk\AppData\Local\MiKTeX\fonts/pk/ljfour/jknappen/ec/dpi600\ecti1200.pk> <C:\Users\4maxk\AppData\Local\MiKTeX\fonts/pk/ljfour/jknappen/ec/dpi600\ectt1200.pk> <C:\Users\4maxk\AppData\Local\MiKTeX\fonts/pk/ljfour/jknappen/ec/dpi600\ecsl1200.pk> <C:\Users\4maxk\AppData\Local\MiKTeX\fonts/pk/ljfour/jknappen/ec/dpi600\ecrm1200.pk> <C:\Users\4maxk\AppData\Local\MiKTeX\fonts/pk/ljfour/jknappen/ec/dpi600\ecbx1200.pk> <C:\Users\4maxk\AppData\Local\MiKTeX\fonts/pk/ljfour/jknappen/ec/dpi600\ecbx2488.pk> <C:\Users\4maxk\AppData\Local\MiKTeX\fonts/pk/ljfour/jknappen/ec/dpi600\ecrm1440.pk> <C:\Users\4maxk\AppData\Local\MiKTeX\fonts/pk/ljfour/jknappen/ec/dpi600\ecrm2074.pk> <C:\Users\4maxk\AppData\Local\MiKTeX\fonts/pk/ljfour/jknappen/ec/dpi600\ecrm1728.pk><C:/Users/4maxk/AppData/Local/Programs/MiKTeX/fonts/type1/public/amsfonts/cm/cmmi10.pfb><C:/Users/4maxk/AppData/Local/Programs/MiKTeX/fonts/type1/public/amsfonts/cm/cmr10.pfb><C:/Users/4maxk/AppData/Local/Programs/MiKTeX/fonts/type1/public/amsfonts/cm/cmr8.pfb><C:/Users/4maxk/AppData/Local/Programs/MiKTeX/fonts/type1/public/amsfonts/cm/cmsy10.pfb>
-Output written on praca_inz_kudelski_2026_v01.pdf (29 pages, 240611 bytes).
+Output written on praca_inz_kudelski_2026_v01.pdf (33 pages, 249879 bytes).
 PDF statistics:
- 611 PDF objects out of 1000 (max. 8388607)
+ 629 PDF objects out of 1000 (max. 8388607)
  0 named destinations out of 1000 (max. 500000)
  1 words of extra memory for PDF output out of 10000 (max. 10000000)
 

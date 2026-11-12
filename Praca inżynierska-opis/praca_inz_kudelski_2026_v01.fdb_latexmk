@@ -1,11 +1,11 @@
 # Fdb version 4
-["makeindex praca_inz_kudelski_2026_v01.idx"] 1792342711.2915 "praca_inz_kudelski_2026_v01.idx" "praca_inz_kudelski_2026_v01.ind" "praca_inz_kudelski_2026_v01" 1792353450.19174 0
-  "praca_inz_kudelski_2026_v01.idx" 1792353449 0 d41d8cd98f00b204e9800998ecf8427e "pdflatex"
+["makeindex praca_inz_kudelski_2026_v01.idx"] 1792342711.2915 "praca_inz_kudelski_2026_v01.idx" "praca_inz_kudelski_2026_v01.ind" "praca_inz_kudelski_2026_v01" 1794524972.60639 0
+  "praca_inz_kudelski_2026_v01.idx" 1794524971 0 d41d8cd98f00b204e9800998ecf8427e "pdflatex"
   (generated)
   "praca_inz_kudelski_2026_v01.ilg"
   "praca_inz_kudelski_2026_v01.ind"
   (rewritten before read)
-["pdflatex"] 1792353449.01802 "c:/Users/4maxk/Desktop/GitHub/CRISP-DM-web-app/Praca inżynierska-opis/praca_inz_kudelski_2026_v01.tex" "praca_inz_kudelski_2026_v01.pdf" "praca_inz_kudelski_2026_v01" 1792353450.19248 0
+["pdflatex"] 1794524971.27422 "c:/Users/4maxk/Desktop/GitHub/CRISP-DM-web-app/Praca inżynierska-opis/praca_inz_kudelski_2026_v01.tex" "praca_inz_kudelski_2026_v01.pdf" "praca_inz_kudelski_2026_v01" 1794524972.60724 0
   "C:/Users/4maxk/AppData/Local/MiKTeX/fonts/map/pdftex/pdftex.map" 1781201172 80909 eab91d9745dd2edfd62a31d53cd5fe15 ""
   "C:/Users/4maxk/AppData/Local/MiKTeX/fonts/pk/ljfour/jknappen/ec/dpi600/ecbx1200.pk" 1781201181 31952 131c01be31d52cbd7dff89161a81221e ""
   "C:/Users/4maxk/AppData/Local/MiKTeX/fonts/pk/ljfour/jknappen/ec/dpi600/ecbx1440.pk" 1781277766 40136 0ca42fd544c6eda9d23d38d178f16aa0 ""
@@ -97,14 +97,14 @@
   "C:/Users/4maxk/AppData/Local/Programs/MiKTeX/tex/latex/listings/lstmisc.sty" 1763898348 77105 002e983b638eadbf04e580642335f689 ""
   "C:/Users/4maxk/AppData/Local/Programs/MiKTeX/tex/latex/listings/lstpatch.sty" 1763898348 353 9024412f43e92cd5b21fe9ded82d0610 ""
   "C:/Users/4maxk/AppData/Local/Programs/MiKTeX/tex/latex/newfloat/newfloat.sty" 1696192043 30252 f6e8905c538136e67643aa414a2c9161 ""
-  "c:/Users/4maxk/Desktop/GitHub/CRISP-DM-web-app/Praca inżynierska-opis/praca_inz_kudelski_2026_v01.tex" 1792353448 24080 502e8b3f1aae8368f4c004ad67b4b967 ""
-  "praca_inz_kudelski_2026_v01.aux" 1792353449 3515 df6dd967148a1cbce35f0b1a65da533a "pdflatex"
+  "c:/Users/4maxk/Desktop/GitHub/CRISP-DM-web-app/Praca inżynierska-opis/praca_inz_kudelski_2026_v01.tex" 1794524969 30794 43a2d3d16199d5205b9688d54bf92f62 ""
+  "praca_inz_kudelski_2026_v01.aux" 1794524972 3829 12e7933cb03cfffb0801d902eb8d0cc1 "pdflatex"
   "praca_inz_kudelski_2026_v01.ind" 1792342711 0 d41d8cd98f00b204e9800998ecf8427e "makeindex praca_inz_kudelski_2026_v01.idx"
-  "praca_inz_kudelski_2026_v01.locode" 1792353449 100 4353d675f6b597e3aa3d5147c8369dec "pdflatex"
-  "praca_inz_kudelski_2026_v01.lof" 1792353449 129 cea4326d0b03b145ebad777947f10814 "pdflatex"
-  "praca_inz_kudelski_2026_v01.lot" 1792353449 211 dcfee29585a7cea7bd05303cbfd35ade "pdflatex"
-  "praca_inz_kudelski_2026_v01.tex" 1792353448 24080 502e8b3f1aae8368f4c004ad67b4b967 ""
-  "praca_inz_kudelski_2026_v01.toc" 1792353449 1575 467bd9dabbcb55d7a30cbb91fe672c99 "pdflatex"
+  "praca_inz_kudelski_2026_v01.locode" 1794524972 100 4353d675f6b597e3aa3d5147c8369dec "pdflatex"
+  "praca_inz_kudelski_2026_v01.lof" 1794524972 129 cea4326d0b03b145ebad777947f10814 "pdflatex"
+  "praca_inz_kudelski_2026_v01.lot" 1794524972 211 dcfee29585a7cea7bd05303cbfd35ade "pdflatex"
+  "praca_inz_kudelski_2026_v01.tex" 1794524969 30794 43a2d3d16199d5205b9688d54bf92f62 ""
+  "praca_inz_kudelski_2026_v01.toc" 1794524972 1766 0b1e37b014a5caebf9f16df1c086f715 "pdflatex"
   (generated)
   "praca_inz_kudelski_2026_v01.aux"
   "praca_inz_kudelski_2026_v01.idx"

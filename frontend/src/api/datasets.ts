@@ -251,14 +251,21 @@ export interface CorrelationMatrix {
   matrix: (number | null)[][];
 }
 
+export type TargetCorrelationMethod =
+  | "pearson"
+  | "cramers_v"
+  | "correlation_ratio";
+
 export interface TargetCorrelation {
   column: string;
   correlation: number | null;
+  method: TargetCorrelationMethod;
 }
 
 export interface TargetCorrelations {
   target: string;
-  method: "pearson";
+  target_type: SemanticType;
+  method: "mixed";
   correlations: TargetCorrelation[];
 }
 

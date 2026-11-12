@@ -12,12 +12,26 @@ import {
 } from "recharts";
 
 import { getDatasetTargetCorrelations } from "../../api/datasets";
-import type { TargetCorrelations } from "../../api/datasets";
+import type {
+  TargetCorrelations,
+  TargetCorrelationMethod,
+} from "../../api/datasets";
 
 interface TargetCorrelationChartProps {
   datasetId: number;
   targetColumn: string;
 }
+
+const getMethodLabel = (method: TargetCorrelationMethod): string => {
+  switch (method) {
+    case "pearson":
+      return "Pearson";
+    case "cramers_v":
+      return "V Craméra";
+    case "correlation_ratio":
+      return "Eta";
+  }
+};
 
 const TargetCorrelationChart = ({
   datasetId,
@@ -55,7 +69,7 @@ const TargetCorrelationChart = ({
 
           setError(
             responseData?.detail ??
-              "Nie udało się obliczyć korelacji z targetem.",
+              "Nie udało się obliczyć zależności z targetem.",
           );
         }
       } finally {
@@ -75,7 +89,7 @@ const TargetCorrelationChart = ({
   if (isLoading) {
     return (
       <div className="rounded-lg border bg-gray-50 p-5 text-gray-500">
-        Obliczanie korelacji z targetem...
+        Obliczanie zależności z targetem...
       </div>
     );
   }
@@ -84,12 +98,10 @@ const TargetCorrelationChart = ({
     return (
       <div className="rounded-lg border bg-gray-50 p-5">
         <h3 className="text-lg font-semibold text-gray-900">
-          Korelacja z targetem
+          Zależność z targetem
         </h3>
 
-        <p className="mt-2 text-sm text-amber-700">
-          {error}
-        </p>
+        <p className="mt-2 text-sm text-amber-700">{error}</p>
       </div>
     );
   }
@@ -99,16 +111,13 @@ const TargetCorrelationChart = ({
   }
 
   const validCorrelations = data.correlations
-    .filter(
-      (
-        item,
-      ): item is { column: string; correlation: number } =>
-        item.correlation !== null,
-    )
-    .sort(
-      (a, b) =>
-        Math.abs(b.correlation) - Math.abs(a.correlation),
-    );
+    .filter((item) => item.correlation !== null)
+    .map((item) => ({
+      ...item,
+      correlation: item.correlation as number,
+      strength: Math.abs(item.correlation as number),
+    }))
+    .sort((a, b) => b.strength - a.strength);
 
   const missingCount =
     data.correlations.length - validCorrelations.length;
@@ -117,16 +126,24 @@ const TargetCorrelationChart = ({
     return (
       <div className="rounded-lg border bg-gray-50 p-5">
         <h3 className="text-lg font-semibold text-gray-900">
-          Korelacja z targetem
+          Zależność z targetem
         </h3>
 
         <p className="mt-2 text-sm text-gray-500">
           Nie znaleziono zmiennych, dla których można obliczyć
-          korelację z wybranym targetem.
+          zależność z wybranym targetem.
         </p>
       </div>
     );
   }
+
+  const hasPearson = validCorrelations.some(
+    (item) => item.method === "pearson",
+  );
+
+  const hasOtherMethods = validCorrelations.some(
+    (item) => item.method !== "pearson",
+  );
 
   const chartHeight = Math.max(
     280,
@@ -137,11 +154,11 @@ const TargetCorrelationChart = ({
     <div className="rounded-lg border bg-white p-5">
       <div className="mb-4">
         <h3 className="text-lg font-semibold text-gray-900">
-          Korelacja zmiennych z targetem
+          Zależność zmiennych z targetem
         </h3>
 
         <p className="mt-1 text-sm text-gray-500">
-          Zależność liniowa poszczególnych zmiennych od targetu:
+          Analiza zależności poszczególnych zmiennych od targetu:
           <span className="ml-1 font-medium text-gray-700">
             {data.target}
           </span>
@@ -177,10 +194,14 @@ const TargetCorrelationChart = ({
             />
 
             <Tooltip
-              formatter={(value) => [
-                Number(value).toFixed(3),
-                "Korelacja",
-              ]}
+              formatter={(_value, _name, props) => {
+                const item = props.payload;
+
+                return [
+                  `${item.correlation.toFixed(3)} (${getMethodLabel(item.method)})`,
+                  "Wartość",
+                ];
+              }}
               labelFormatter={(label) => `Zmienna: ${label}`}
             />
 
@@ -192,13 +213,48 @@ const TargetCorrelationChart = ({
 
             <Bar
               dataKey="correlation"
-              name="Korelacja"
+              name="Zależność"
               fill="#2563eb"
               radius={[0, 4, 4, 0]}
               barSize={22}
             />
           </BarChart>
         </ResponsiveContainer>
+      </div>
+
+      <div className="mt-4 space-y-1 text-xs text-gray-600">
+        {hasPearson && (
+          <p>
+            <strong>Pearson:</strong> od -1 do 1. Określa siłę
+            i kierunek korelacji liniowej.
+          </p>
+        )}
+
+        {hasOtherMethods && (
+          <p>
+            <strong>V Craméra i Eta:</strong> od 0 do 1.
+            Określają siłę zależności, bez wskazywania jej kierunku.
+          </p>
+        )}
+      </div>
+
+      <div className="mt-4">
+        <p className="mb-2 text-xs font-medium text-gray-700">
+          Zastosowane metody:
+        </p>
+
+        <div className="flex flex-wrap gap-2">
+          {Array.from(
+            new Set(validCorrelations.map((item) => item.method)),
+          ).map((method) => (
+            <span
+              key={method}
+              className="rounded-full bg-gray-100 px-3 py-1 text-xs text-gray-700"
+            >
+              {getMethodLabel(method)}
+            </span>
+          ))}
+        </div>
       </div>
 
       {missingCount > 0 && (
@@ -209,15 +265,9 @@ const TargetCorrelationChart = ({
             : missingCount < 5
               ? "zmienne"
               : "zmiennych"}{" "}
-          z powodu braku możliwości obliczenia korelacji.
+          z powodu braku możliwości obliczenia zależności.
         </p>
       )}
-
-      <p className="mt-3 text-xs text-gray-500">
-        Wartość bliska 1 oznacza silną dodatnią zależność liniową,
-        a bliska -1 silną ujemną zależność liniową.
-        Wartość bliska 0 oznacza słabą zależność liniową.
-      </p>
     </div>
   );
 };
