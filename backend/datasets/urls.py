@@ -16,6 +16,7 @@ from .views import (
     DatasetTargetCorrelationsView,
     DatasetTargetView,
     DatasetCorrelationMatrixView,
+    DatasetModelingView
 )
 
 urlpatterns = [
@@ -93,5 +94,10 @@ urlpatterns = [
         "<int:pk>/target-correlations/",
         DatasetTargetCorrelationsView.as_view(),
         name="dataset-target-correlations",
+    ),
+    path(
+        "<int:pk>/modeling/",
+        DatasetModelingView.as_view(),
+        name="dataset-modeling",
     ),
 ]

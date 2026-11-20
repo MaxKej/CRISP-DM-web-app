@@ -10,6 +10,7 @@ import BoxplotChart from "../../components/datasets/BoxplotChart";
 import CorrelationHeatmap from "../../components/datasets/CorrelationHeatmap";
 import TargetCorrelationChart from "../../components/datasets/TargetCorrelationChart";
 import DataPreparation from "../../components/datasets/DataPreparation";
+import Modeling from "../../components/datasets/Modeling";
 
 import {
   getDatasetProfile,
@@ -632,13 +633,11 @@ const DatasetPage = () => {
             )}
 
             {activeStage === "modeling" && (
-              <section>
-                <h2 className="text-xl font-semibold">Modeling</h2>
-                <p className="mt-2 text-gray-600">
-                  Modelowanie danych będzie dostępne w kolejnym
-                  etapie implementacji.
-                </p>
-              </section>
+              <Modeling
+                datasetId={Number(datasetId)}
+                targetColumn={targetColumn}
+                columns={profile.columns}
+              />
             )}
 
             {activeStage === "evaluation" && (

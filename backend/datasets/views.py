@@ -16,6 +16,7 @@ from .serializers import (
     FillMissingValuesSerializer,
     CreateSyntheticColumnSerializer,
     TargetColumnSerializer,
+    ModelingSerializer,
 )
 from .profiling import (
     load_dataset,
@@ -32,6 +33,9 @@ from .preparation import (
     save_prepared_dataset,
     create_synthetic_column,
 )
+
+from .regression import train_regression_model
+from .classification import train_classification_model
 
 class DatasetListCreateView(generics.ListCreateAPIView):
     serializer_class = DatasetSerializer
@@ -545,3 +549,59 @@ class DatasetTargetCorrelationsView(APIView):
             raise ValidationError(str(exc)) from exc
 
         return Response(result)
+
+
+class DatasetModelingView(APIView):
+    """Widok uruchamiający trenowanie modelu."""
+
+    def post(self, request, pk):
+        dataset = generics.get_object_or_404(
+            Dataset.objects.filter(
+                project__owner=request.user,
+            ),
+            pk=pk,
+        )
+
+        # Sprawdzenie, czy wybrano zmienną docelową.
+        if not dataset.target_column:
+            raise ValidationError({
+                "target_column": (
+                    "Przed rozpoczęciem modelowania "
+                    "wybierz zmienną docelową w Data Understanding."
+                )
+            })
+
+        serializer = ModelingSerializer(data=request.data)
+        serializer.is_valid(raise_exception=True)
+
+        data = serializer.validated_data
+
+        try:
+            # Pobranie danych po etapie Data Preparation.
+            dataframe = load_prepared_dataset(dataset)
+
+            # Uruchomienie odpowiedniego rodzaju modelowania.
+            if data["task_type"] == "regression":
+                result = train_regression_model(
+                    dataframe=dataframe,
+                    target_column=dataset.target_column,
+                    model_type=data["model_type"],
+                    excluded_features=data["excluded_features"],
+                )
+
+            else:
+                result = train_classification_model(
+                    dataframe=dataframe,
+                    target_column=dataset.target_column,
+                    model_type=data["model_type"],
+                    excluded_features=data["excluded_features"],
+                )
+
+        except (ValueError, OSError) as exc:
+            raise ValidationError(str(exc)) from exc
+
+        return Response({
+            "dataset_id": dataset.id,
+            "dataset_name": dataset.name,
+            **result,
+        })

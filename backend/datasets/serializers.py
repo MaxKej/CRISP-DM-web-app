@@ -126,3 +126,65 @@ class TargetColumnSerializer(serializers.Serializer):
         allow_blank=True,
         trim_whitespace=True,
     )
+
+
+class ModelingSerializer(serializers.Serializer):
+    task_type = serializers.ChoiceField(
+        choices=["regression", "classification"],
+    )
+
+    model_type = serializers.ChoiceField(
+        choices=[
+            "linear_regression",
+            "ridge",
+            "lasso",
+            "logistic_regression",
+            "random_forest",
+            "xgboost",
+        ],
+    )
+
+    excluded_features = serializers.ListField(
+        child=serializers.CharField(
+            allow_blank=False,
+            trim_whitespace=True,
+        ),
+        required=False,
+        default=list,
+        allow_empty=True,
+    )
+
+    def validate(self, attrs):
+        task_type = attrs["task_type"]
+        model_type = attrs["model_type"]
+
+        regression_models = {
+            "linear_regression",
+            "ridge",
+            "lasso",
+            "xgboost",
+        }
+
+        classification_models = {
+            "logistic_regression",
+            "random_forest",
+            "xgboost",
+        }
+
+        if (
+            task_type == "regression"
+            and model_type not in regression_models
+        ):
+            raise serializers.ValidationError({
+                "model_type": "Wybrany algorytm nie obsługuje regresji."
+            })
+
+        if (
+            task_type == "classification"
+            and model_type not in classification_models
+        ):
+            raise serializers.ValidationError({
+                "model_type": "Wybrany algorytm nie obsługuje klasyfikacji."
+            })
+
+        return attrs

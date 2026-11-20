@@ -386,3 +386,41 @@ export const createDatasetSyntheticColumn = async (
 
   return response.data;
 };
+
+// ============================================================
+// MODELING
+// ============================================================
+
+export type ModelingTaskType = "regression" | "classification";
+
+export type RegressionModelType =
+  | "linear_regression"
+  | "ridge"
+  | "xgboost";
+
+export type ClassificationModelType =
+  | "logistic_regression"
+  | "random_forest"
+  | "xgboost";
+
+export type ModelingModelType =
+  | RegressionModelType
+  | ClassificationModelType;
+
+export interface ModelingPayload {
+  task_type: ModelingTaskType;
+  model_type: ModelingModelType;
+  excluded_features: string[];
+}
+
+export const runDatasetModeling = async (
+  datasetId: number,
+  payload: ModelingPayload,
+): Promise<Record<string, unknown>> => {
+  const response = await apiClient.post<Record<string, unknown>>(
+    `datasets/${datasetId}/modeling/`,
+    payload,
+  );
+
+  return response.data;
+};
