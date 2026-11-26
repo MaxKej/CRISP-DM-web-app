@@ -1,4 +1,3 @@
-
 import apiClient from "./client";
 import type { Dataset } from "../types/dataset";
 
@@ -7,10 +6,10 @@ import type { Dataset } from "../types/dataset";
 // ============================================================
 
 export const getProjectDatasets = async (
-  projectId: number
+  projectId: number,
 ): Promise<Dataset[]> => {
   const response = await apiClient.get<Dataset[]>(
-    `datasets/?project=${projectId}`
+    `datasets/?project=${projectId}`,
   );
 
   return response.data;
@@ -18,7 +17,7 @@ export const getProjectDatasets = async (
 
 export const createDataset = async (
   projectId: number,
-  file: File
+  file: File,
 ): Promise<Dataset> => {
   const formData = new FormData();
 
@@ -32,14 +31,14 @@ export const createDataset = async (
       headers: {
         "Content-Type": "multipart/form-data",
       },
-    }
+    },
   );
 
   return response.data;
 };
 
 export const deleteDataset = async (
-  datasetId: number
+  datasetId: number,
 ): Promise<void> => {
   await apiClient.delete(`datasets/${datasetId}/`);
 };
@@ -99,20 +98,20 @@ export interface DatasetPreview {
 }
 
 export const getDatasetProfile = async (
-  datasetId: number
+  datasetId: number,
 ): Promise<DatasetProfile> => {
   const response = await apiClient.get<DatasetProfile>(
-    `datasets/${datasetId}/profile/`
+    `datasets/${datasetId}/profile/`,
   );
 
   return response.data;
 };
 
 export const getDatasetPreview = async (
-  datasetId: number
+  datasetId: number,
 ): Promise<DatasetPreview> => {
   const response = await apiClient.get<DatasetPreview>(
-    `datasets/${datasetId}/preview/`
+    `datasets/${datasetId}/preview/`,
   );
 
   return response.data;
@@ -222,7 +221,7 @@ export const getDatasetTarget = async (
   datasetId: number,
 ): Promise<DatasetTarget> => {
   const response = await apiClient.get<DatasetTarget>(
-    `datasets/${datasetId}/target/`
+    `datasets/${datasetId}/target/`,
   );
 
   return response.data;
@@ -236,7 +235,7 @@ export const updateDatasetTarget = async (
     `datasets/${datasetId}/target/`,
     {
       target_column: targetColumn,
-    }
+    },
   );
 
   return response.data;
@@ -273,7 +272,7 @@ export const getDatasetCorrelations = async (
   datasetId: number,
 ): Promise<CorrelationMatrix> => {
   const response = await apiClient.get<CorrelationMatrix>(
-    `datasets/${datasetId}/correlations/`
+    `datasets/${datasetId}/correlations/`,
   );
 
   return response.data;
@@ -283,12 +282,11 @@ export const getDatasetTargetCorrelations = async (
   datasetId: number,
 ): Promise<TargetCorrelations> => {
   const response = await apiClient.get<TargetCorrelations>(
-    `datasets/${datasetId}/target-correlations/`
+    `datasets/${datasetId}/target-correlations/`,
   );
 
   return response.data;
 };
-
 
 // ============================================================
 // DATA PREPARATION
@@ -310,7 +308,10 @@ export interface PreparationResult {
 
 export type MissingValueMethod = "mean" | "median" | "mode";
 
+// ------------------------------------------------------------
 // Usuwanie kolumn
+// ------------------------------------------------------------
+
 export const removeDatasetColumns = async (
   datasetId: number,
   columns: string[],
@@ -318,39 +319,55 @@ export const removeDatasetColumns = async (
 ): Promise<PreparationResult> => {
   const response = await apiClient.post<PreparationResult>(
     `datasets/${datasetId}/preparation/remove-columns/`,
-    { columns, save },
+    {
+      columns,
+      save,
+    },
   );
 
   return response.data;
 };
 
+// ------------------------------------------------------------
 // Usuwanie całkowicie pustych wierszy
+// ------------------------------------------------------------
+
 export const removeEmptyDatasetRows = async (
   datasetId: number,
   save: boolean,
 ): Promise<PreparationResult> => {
   const response = await apiClient.post<PreparationResult>(
     `datasets/${datasetId}/preparation/remove-empty-rows/`,
-    { save },
+    {
+      save,
+    },
   );
 
   return response.data;
 };
 
+// ------------------------------------------------------------
 // Usuwanie duplikatów
+// ------------------------------------------------------------
+
 export const removeDuplicateDatasetRows = async (
   datasetId: number,
   save: boolean,
 ): Promise<PreparationResult> => {
   const response = await apiClient.post<PreparationResult>(
     `datasets/${datasetId}/preparation/remove-duplicates/`,
-    { save },
+    {
+      save,
+    },
   );
 
   return response.data;
 };
 
+// ------------------------------------------------------------
 // Uzupełnianie brakujących wartości
+// ------------------------------------------------------------
+
 export const fillDatasetMissingValues = async (
   datasetId: number,
   methods: Record<string, MissingValueMethod>,
@@ -358,13 +375,19 @@ export const fillDatasetMissingValues = async (
 ): Promise<PreparationResult> => {
   const response = await apiClient.post<PreparationResult>(
     `datasets/${datasetId}/preparation/fill-missing-values/`,
-    { methods, save },
+    {
+      methods,
+      save,
+    },
   );
 
   return response.data;
 };
 
+// ------------------------------------------------------------
 // Tworzenie zmiennej syntetycznej
+// ------------------------------------------------------------
+
 export type SyntheticColumnOperator = "+" | "-" | "*" | "/";
 
 export interface CreateSyntheticColumnPayload {
@@ -381,6 +404,47 @@ export const createDatasetSyntheticColumn = async (
 ): Promise<PreparationResult> => {
   const response = await apiClient.post<PreparationResult>(
     `datasets/${datasetId}/preparation/create-synthetic-column/`,
+    payload,
+  );
+
+  return response.data;
+};
+
+// ------------------------------------------------------------
+// Usuwanie wartości odstających
+// ------------------------------------------------------------
+
+export type OutlierOperator =
+  | "eq"
+  | "ne"
+  | "lt"
+  | "lte"
+  | "gt"
+  | "gte";
+
+export interface CustomOutlierRule {
+  column: string;
+  operator: OutlierOperator;
+  value: string | number;
+}
+
+export interface RemoveOutliersPayload {
+  columns: string[];
+  std_threshold: number | null;
+  custom_rules: {
+    column: string;
+    operator: OutlierOperator;
+    value: number;
+  }[];
+  save: boolean;
+}
+
+export const removeDatasetOutliers = async (
+  datasetId: number,
+  payload: RemoveOutliersPayload,
+): Promise<PreparationResult> => {
+  const response = await apiClient.post<PreparationResult>(
+    `datasets/${datasetId}/preparation/remove-outliers/`,
     payload,
   );
 

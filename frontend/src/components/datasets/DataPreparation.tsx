@@ -7,19 +7,25 @@ import {
   removeDuplicateDatasetRows,
   fillDatasetMissingValues,
   createDatasetSyntheticColumn,
+  removeDatasetOutliers,
 } from "../../api/datasets";
 import type {
   PreparationResult,
   MissingValueMethod,
   SyntheticColumnOperator,
+  CustomOutlierRule,
 } from "../../api/datasets";
 import { useNotification } from "../../context/NotificationContext";
 
 interface DataPreparationProps {
   datasetId: number;
+  onDataSaved?: () => void | Promise<void>;
 }
 
-const DataPreparation = ({ datasetId }: DataPreparationProps) => {
+const DataPreparation = ({
+  datasetId,
+  onDataSaved,
+}: DataPreparationProps) => {
   const { showNotification } = useNotification();
 
   const [columns, setColumns] = useState<string[]>([]);
@@ -39,6 +45,18 @@ const DataPreparation = ({ datasetId }: DataPreparationProps) => {
   const [rightColumn, setRightColumn] = useState("");
   const [operator, setOperator] = useState<SyntheticColumnOperator>("+");
 
+  // Usuwanie wartości odstających
+  const [outlierColumns, setOutlierColumns] = useState<string[]>([]);
+  const [stdThreshold, setStdThreshold] = useState<number>(3);
+
+  const [customRules, setCustomRules] = useState<CustomOutlierRule[]>([
+    {
+      column: "",
+      operator: "gt",
+      value: "",
+    },
+  ]);
+
   useEffect(() => {
     const loadPreview = async () => {
       try {
@@ -48,6 +66,7 @@ const DataPreparation = ({ datasetId }: DataPreparationProps) => {
 
         setColumns(data.columns);
         setRows(data.rows);
+        setResult(null);
       } catch {
         showNotification(
           "Nie udało się pobrać podglądu zbioru danych.",
@@ -58,7 +77,7 @@ const DataPreparation = ({ datasetId }: DataPreparationProps) => {
       }
     };
 
-    loadPreview();
+    void loadPreview();
   }, [datasetId]);
 
   const handleColumnSelection = (column: string) => {
@@ -89,10 +108,17 @@ const DataPreparation = ({ datasetId }: DataPreparationProps) => {
       setMissingMethods({});
 
       showNotification("Operacja została zapisana.", "success");
+
+      // Powiadomienie DatasetPage o zapisaniu zmian.
+      void onDataSaved?.();
     } else {
       showNotification("Podgląd operacji został wygenerowany.", "success");
     }
   };
+
+  // ============================================================
+  // USUWANIE KOLUMN
+  // ============================================================
 
   const handleRemoveColumns = async (save: boolean) => {
     if (selectedColumns.length === 0) {
@@ -118,6 +144,10 @@ const DataPreparation = ({ datasetId }: DataPreparationProps) => {
     }
   };
 
+  // ============================================================
+  // USUWANIE PUSTYCH WIERSZY
+  // ============================================================
+
   const handleRemoveEmptyRows = async (save: boolean) => {
     try {
       setProcessing(true);
@@ -133,6 +163,10 @@ const DataPreparation = ({ datasetId }: DataPreparationProps) => {
     }
   };
 
+  // ============================================================
+  // USUWANIE DUPLIKATÓW
+  // ============================================================
+
   const handleRemoveDuplicates = async (save: boolean) => {
     try {
       setProcessing(true);
@@ -147,6 +181,10 @@ const DataPreparation = ({ datasetId }: DataPreparationProps) => {
       setProcessing(false);
     }
   };
+
+  // ============================================================
+  // UZUPEŁNIANIE BRAKUJĄCYCH WARTOŚCI
+  // ============================================================
 
   const handleFillMissingValues = async (save: boolean) => {
     if (Object.keys(missingMethods).length === 0) {
@@ -177,6 +215,10 @@ const DataPreparation = ({ datasetId }: DataPreparationProps) => {
       setProcessing(false);
     }
   };
+
+  // ============================================================
+  // TWORZENIE ZMIENNEJ SYNTETYCZNEJ
+  // ============================================================
 
   const handleCreateSyntheticColumn = async (save: boolean) => {
     if (!syntheticName.trim() || !leftColumn || !rightColumn) {
@@ -214,6 +256,131 @@ const DataPreparation = ({ datasetId }: DataPreparationProps) => {
     }
   };
 
+  // ============================================================
+  // USUWANIE WARTOŚCI ODSTAJĄCYCH
+  // ============================================================
+
+  // Kolumny liczbowe rozpoznawane na podstawie pobranego podglądu.
+  const numericColumns = columns.filter((column) =>
+    rows.some(
+      (row) =>
+        typeof row[column] === "number" &&
+        Number.isFinite(row[column] as number),
+    ),
+  );
+
+  const handleOutlierColumnSelection = (column: string) => {
+    setOutlierColumns((previous) =>
+      previous.includes(column)
+        ? previous.filter((item) => item !== column)
+        : [...previous, column],
+    );
+  };
+
+  const handleCustomRuleChange = (
+    index: number,
+    field: keyof CustomOutlierRule,
+    value: string,
+  ) => {
+    setCustomRules((previous) =>
+      previous.map((rule, ruleIndex) =>
+        ruleIndex === index
+          ? {
+              ...rule,
+              [field]: value,
+            }
+          : rule,
+      ),
+    );
+  };
+
+  const addCustomRule = () => {
+    setCustomRules((previous) => [
+      ...previous,
+      {
+        column: "",
+        operator: "gt",
+        value: "",
+      },
+    ]);
+  };
+
+  const removeCustomRule = (index: number) => {
+    setCustomRules((previous) =>
+      previous.filter((_, ruleIndex) => ruleIndex !== index),
+    );
+  };
+
+  const handleRemoveOutliers = async (save: boolean) => {
+    const activeRules = customRules.filter(
+      (rule) => rule.column && rule.value !== "",
+    );
+
+    const hasIncompleteRules = customRules.some(
+      (rule) =>
+        (rule.column !== "" || rule.value !== "") &&
+        (!rule.column ||
+          rule.value === "" ||
+          !Number.isFinite(Number(rule.value))),
+    );
+
+    if (outlierColumns.length === 0 && activeRules.length === 0) {
+      showNotification(
+        "Wybierz kolumny do analizy lub dodaj regułę niestandardową.",
+        "error",
+      );
+      return;
+    }
+
+    if (hasIncompleteRules) {
+      showNotification(
+        "Uzupełnij poprawnie wszystkie pola reguł niestandardowych.",
+        "error",
+      );
+      return;
+    }
+
+    try {
+      setProcessing(true);
+
+      const data = await removeDatasetOutliers(datasetId, {
+        columns: outlierColumns,
+        std_threshold: outlierColumns.length > 0 ? stdThreshold : null,
+        custom_rules: activeRules.map((rule) => ({
+          column: rule.column,
+          operator: rule.operator,
+          value: Number(rule.value),
+        })),
+        save,
+      });
+
+      applyResult(data);
+
+      if (data.saved) {
+        setOutlierColumns([]);
+        setCustomRules([
+          {
+            column: "",
+            operator: "gt",
+            value: "",
+          },
+        ]);
+      }
+    } catch (error) {
+      console.error(error);
+      showNotification(
+        "Nie udało się usunąć wartości odstających.",
+        "error",
+      );
+    } finally {
+      setProcessing(false);
+    }
+  };
+
+  // ============================================================
+  // PRZYCISKI OPERACJI
+  // ============================================================
+
   const renderActionButtons = (
     previewAction: () => void,
     saveAction: () => void,
@@ -248,8 +415,13 @@ const DataPreparation = ({ datasetId }: DataPreparationProps) => {
 
   return (
     <div className="space-y-8">
+      {/* ====================================================== */}
+      {/* INFORMACJE O ZBIORZE */}
+      {/* ====================================================== */}
+
       <section className="rounded-xl border border-gray-200 bg-white p-5">
         <h2 className="text-xl font-semibold">Data Preparation</h2>
+
         <p className="mt-2 text-sm text-gray-600">
           Wybierz operacje przygotowania danych. Możesz najpierw
           wygenerować podgląd, a następnie zapisać wybraną operację.
@@ -258,24 +430,25 @@ const DataPreparation = ({ datasetId }: DataPreparationProps) => {
         <div className="mt-4 grid grid-cols-1 gap-4 sm:grid-cols-2">
           <div className="rounded-lg bg-gray-50 p-4">
             <p className="text-sm text-gray-500">Liczba kolumn</p>
-            <p className="mt-1 text-2xl font-semibold">
-              {columns.length}
-            </p>
+            <p className="mt-1 text-2xl font-semibold">{columns.length}</p>
           </div>
 
           <div className="rounded-lg bg-gray-50 p-4">
             <p className="text-sm text-gray-500">
               Wiersze w aktualnym podglądzie
             </p>
-            <p className="mt-1 text-2xl font-semibold">
-              {rows.length}
-            </p>
+            <p className="mt-1 text-2xl font-semibold">{rows.length}</p>
           </div>
         </div>
       </section>
 
+      {/* ====================================================== */}
+      {/* 1. USUWANIE KOLUMN */}
+      {/* ====================================================== */}
+
       <section className="rounded-xl border border-gray-200 bg-white p-5">
         <h3 className="text-lg font-semibold">1. Usuwanie kolumn</h3>
+
         <p className="mt-1 text-sm text-gray-600">
           Wybierz kolumny, które mają zostać usunięte ze zbioru.
         </p>
@@ -302,8 +475,15 @@ const DataPreparation = ({ datasetId }: DataPreparationProps) => {
         )}
       </section>
 
+      {/* ====================================================== */}
+      {/* 2. USUWANIE PUSTYCH WIERSZY */}
+      {/* ====================================================== */}
+
       <section className="rounded-xl border border-gray-200 bg-white p-5">
-        <h3 className="text-lg font-semibold">2. Usuwanie pustych wierszy</h3>
+        <h3 className="text-lg font-semibold">
+          2. Usuwanie pustych wierszy
+        </h3>
+
         <p className="mt-1 text-sm text-gray-600">
           Usuwa wiersze, w których wszystkie wartości są puste.
         </p>
@@ -314,8 +494,13 @@ const DataPreparation = ({ datasetId }: DataPreparationProps) => {
         )}
       </section>
 
+      {/* ====================================================== */}
+      {/* 3. USUWANIE DUPLIKATÓW */}
+      {/* ====================================================== */}
+
       <section className="rounded-xl border border-gray-200 bg-white p-5">
         <h3 className="text-lg font-semibold">3. Usuwanie duplikatów</h3>
+
         <p className="mt-1 text-sm text-gray-600">
           Usuwa powtarzające się wiersze ze zbioru danych.
         </p>
@@ -326,10 +511,185 @@ const DataPreparation = ({ datasetId }: DataPreparationProps) => {
         )}
       </section>
 
+      {/* ====================================================== */}
+      {/* 4. USUWANIE WARTOŚCI ODSTAJĄCYCH */}
+      {/* ====================================================== */}
+
       <section className="rounded-xl border border-gray-200 bg-white p-5">
         <h3 className="text-lg font-semibold">
-          4. Uzupełnianie brakujących wartości
+          4. Usuwanie wartości odstających
         </h3>
+
+        <p className="mt-1 text-sm text-gray-600">
+          Usuń rekordy zawierające wartości odstające na podstawie
+          odchylenia standardowego lub własnych reguł.
+        </p>
+
+        {/* Odchylenie standardowe */}
+        <div className="mt-5">
+          <h4 className="font-medium">
+            Metoda odchylenia standardowego
+          </h4>
+
+          <p className="mt-1 text-sm text-gray-500">
+            Wybierz kolumny liczbowe, dla których zostaną obliczone
+            granice wartości dopuszczalnych.
+          </p>
+
+          <div className="mt-3 grid grid-cols-1 gap-2 sm:grid-cols-2 lg:grid-cols-3">
+            {numericColumns.map((column) => (
+              <label
+                key={column}
+                className="flex items-center gap-2 rounded-lg border border-gray-200 p-3 text-sm"
+              >
+                <input
+                  type="checkbox"
+                  checked={outlierColumns.includes(column)}
+                  onChange={() => handleOutlierColumnSelection(column)}
+                />
+                <span>{column}</span>
+              </label>
+            ))}
+          </div>
+
+          {numericColumns.length === 0 && (
+            <p className="mt-3 text-sm text-gray-500">
+              Nie znaleziono kolumn liczbowych w aktualnym podglądzie.
+            </p>
+          )}
+
+          <div className="mt-4 max-w-xs">
+            <label className="mb-1 block text-sm font-medium">
+              Próg odchyleń standardowych
+            </label>
+
+            <select
+              value={stdThreshold}
+              onChange={(event) =>
+                setStdThreshold(Number(event.target.value))
+              }
+              className="w-full rounded-lg border border-gray-300 px-3 py-2 text-sm"
+            >
+              {[2, 3, 4, 5, 6].map((value) => (
+                <option key={value} value={value}>
+                  {value} odchylenia standardowe
+                </option>
+              ))}
+            </select>
+          </div>
+        </div>
+
+        {/* Reguły niestandardowe */}
+        <div className="mt-6 border-t border-gray-200 pt-5">
+          <h4 className="font-medium">Reguły niestandardowe</h4>
+
+          <p className="mt-1 text-sm text-gray-500">
+            Określ konkretne wartości, których wystąpienie spowoduje
+            usunięcie całego wiersza.
+          </p>
+
+          <div className="mt-4 space-y-3">
+            {customRules.map((rule, index) => (
+              <div
+                key={index}
+                className="grid grid-cols-1 items-center gap-2 sm:grid-cols-[1fr_1fr_1fr_auto]"
+              >
+                <select
+                  value={rule.column}
+                  onChange={(event) =>
+                    handleCustomRuleChange(
+                      index,
+                      "column",
+                      event.target.value,
+                    )
+                  }
+                  className="rounded-lg border border-gray-300 px-3 py-2 text-sm"
+                >
+                  <option value="">Wybierz kolumnę</option>
+
+                  {numericColumns.map((column) => (
+                    <option key={column} value={column}>
+                      {column}
+                    </option>
+                  ))}
+                </select>
+
+                <select
+                  value={rule.operator}
+                  onChange={(event) =>
+                    handleCustomRuleChange(
+                      index,
+                      "operator",
+                      event.target.value,
+                    )
+                  }
+                  className="rounded-lg border border-gray-300 px-3 py-2 text-sm"
+                >
+                  <option value="eq">Równe (=)</option>
+                  <option value="ne">Różne (≠)</option>
+                  <option value="lt">Mniejsze (&lt;)</option>
+                  <option value="lte">Mniejsze lub równe (≤)</option>
+                  <option value="gt">Większe (&gt;)</option>
+                  <option value="gte">Większe lub równe (≥)</option>
+                </select>
+
+                <input
+                  type="number"
+                  step="any"
+                  value={rule.value}
+                  onChange={(event) =>
+                    handleCustomRuleChange(
+                      index,
+                      "value",
+                      event.target.value,
+                    )
+                  }
+                  placeholder="Wartość"
+                  className="rounded-lg border border-gray-300 px-3 py-2 text-sm"
+                />
+
+                <button
+                  type="button"
+                  onClick={() => removeCustomRule(index)}
+                  disabled={processing}
+                  className="rounded-lg border border-red-200 px-3 py-2 text-sm text-red-600 hover:bg-red-50 disabled:opacity-50"
+                >
+                  Usuń
+                </button>
+              </div>
+            ))}
+          </div>
+
+          <button
+            type="button"
+            onClick={addCustomRule}
+            disabled={processing}
+            className="mt-3 rounded-lg border border-gray-300 px-3 py-2 text-sm hover:bg-gray-50 disabled:opacity-50"
+          >
+            + Dodaj regułę
+          </button>
+        </div>
+
+        <p className="mt-4 text-xs text-gray-500">
+          Wiersz zostanie usunięty, jeśli spełni przynajmniej jeden
+          z wybranych warunków.
+        </p>
+
+        {renderActionButtons(
+          () => handleRemoveOutliers(false),
+          () => handleRemoveOutliers(true),
+        )}
+      </section>
+
+      {/* ====================================================== */}
+      {/* 5. UZUPEŁNIANIE BRAKUJĄCYCH WARTOŚCI */}
+      {/* ====================================================== */}
+
+      <section className="rounded-xl border border-gray-200 bg-white p-5">
+        <h3 className="text-lg font-semibold">
+          5. Uzupełnianie brakujących wartości
+        </h3>
+
         <p className="mt-1 text-sm text-gray-600">
           Wybierz metodę uzupełniania osobno dla każdej kolumny.
         </p>
@@ -379,8 +739,15 @@ const DataPreparation = ({ datasetId }: DataPreparationProps) => {
         )}
       </section>
 
+      {/* ====================================================== */}
+      {/* 6. TWORZENIE NOWEJ ZMIENNEJ */}
+      {/* ====================================================== */}
+
       <section className="rounded-xl border border-gray-200 bg-white p-5">
-        <h3 className="text-lg font-semibold">5. Tworzenie nowej zmiennej</h3>
+        <h3 className="text-lg font-semibold">
+          6. Tworzenie nowej zmiennej
+        </h3>
+
         <p className="mt-1 text-sm text-gray-600">
           Utwórz nową kolumnę na podstawie działania matematycznego
           na dwóch istniejących kolumnach.
@@ -401,6 +768,7 @@ const DataPreparation = ({ datasetId }: DataPreparationProps) => {
             className="rounded-lg border border-gray-300 px-3 py-2 text-sm"
           >
             <option value="">Pierwsza kolumna</option>
+
             {columns.map((column) => (
               <option key={column} value={column}>
                 {column}
@@ -427,6 +795,7 @@ const DataPreparation = ({ datasetId }: DataPreparationProps) => {
             className="rounded-lg border border-gray-300 px-3 py-2 text-sm"
           >
             <option value="">Druga kolumna</option>
+
             {columns.map((column) => (
               <option key={column} value={column}>
                 {column}
@@ -441,6 +810,10 @@ const DataPreparation = ({ datasetId }: DataPreparationProps) => {
         )}
       </section>
 
+      {/* ====================================================== */}
+      {/* WYNIK OPERACJI */}
+      {/* ====================================================== */}
+
       {result && (
         <section className="rounded-xl border border-gray-200 bg-white p-5">
           <h3 className="text-lg font-semibold">Wynik operacji</h3>
@@ -453,6 +826,7 @@ const DataPreparation = ({ datasetId }: DataPreparationProps) => {
 
           <div className="mt-4 rounded-lg bg-gray-50 p-4">
             <p className="text-sm font-medium">Podsumowanie</p>
+
             <pre className="mt-2 overflow-x-auto whitespace-pre-wrap text-xs text-gray-700">
               {JSON.stringify(result.summary, null, 2)}
             </pre>

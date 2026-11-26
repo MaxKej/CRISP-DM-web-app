@@ -11,6 +11,7 @@ import CorrelationHeatmap from "../../components/datasets/CorrelationHeatmap";
 import TargetCorrelationChart from "../../components/datasets/TargetCorrelationChart";
 import DataPreparation from "../../components/datasets/DataPreparation";
 import Modeling from "../../components/datasets/Modeling";
+import Evaluation from "../../components/datasets/Evaluation";
 
 import {
   getDatasetProfile,
@@ -24,6 +25,8 @@ import type {
   DatasetProfile,
   DatasetPreview,
   SemanticType,
+  ModelingTaskType,
+  ModelingModelType,
 } from "../../api/datasets";
 
 type Stage =
@@ -31,6 +34,13 @@ type Stage =
   | "preparation"
   | "modeling"
   | "evaluation";
+
+interface ModelingRun {
+  id: number;
+  task_type: ModelingTaskType;
+  model_type: ModelingModelType;
+  result: Record<string, unknown>;
+}
 
 const DatasetPage = () => {
   const { projectId, datasetId } = useParams<{
@@ -50,11 +60,16 @@ const DatasetPage = () => {
   const [targetColumn, setTargetColumn] = useState<string>("");
   const [isSavingTarget, setIsSavingTarget] = useState(false);
 
+  const [modelingRuns, setModelingRuns] = useState<ModelingRun[]>([]);
+
   const [activeStage, setActiveStage] =
     useState<Stage>("understanding");
 
   const [isLoading, setIsLoading] = useState(true);
   const [dataError, setDataError] = useState<string | null>(null);
+
+  // Zmiana tej wartości wymusza ponowne pobranie danych przez wykresy.
+  const [chartsVersion, setChartsVersion] = useState(0);
 
   useEffect(() => {
     let cancelled = false;
@@ -66,6 +81,7 @@ const DatasetPage = () => {
       setPreview(null);
       setTypeOverrides({});
       setTargetColumn("");
+      setModelingRuns([]);
 
       const id = Number(datasetId);
 
@@ -136,6 +152,40 @@ const DatasetPage = () => {
     };
   }, [datasetId, showNotification]);
 
+  // Odświeżenie danych po zapisaniu operacji Data Preparation.
+  const handlePreparationSaved = async () => {
+    try {
+      const id = Number(datasetId);
+
+      const [profileData, previewData] = await Promise.all([
+        getDatasetProfile(id),
+        getDatasetPreview(id),
+      ]);
+
+      const updatedProfile: DatasetProfile = {
+        ...profileData,
+        columns: profileData.columns.map((column) => ({
+          ...column,
+          semantic_type:
+            typeOverrides[column.name] ?? column.semantic_type,
+        })),
+      };
+
+      setProfile(updatedProfile);
+      setPreview(previewData);
+
+      // Wymusza ponowne zamontowanie wykresów po powrocie
+      // do zakładki Data Understanding.
+      setChartsVersion((previous) => previous + 1);
+    } catch (error) {
+      console.error(error);
+      showNotification(
+        "Operacja została zapisana, ale nie udało się odświeżyć danych.",
+        "error",
+      );
+    }
+  };
+
   const handleColumnTypeUpdated = (
     columnName: string,
     type: SemanticType,
@@ -193,6 +243,23 @@ const DatasetPage = () => {
     } finally {
       setIsSavingTarget(false);
     }
+  };
+
+  const handleModelingComplete = (
+    run: Omit<ModelingRun, "id">,
+  ) => {
+    setModelingRuns((previous) => [
+      ...previous,
+      {
+        ...run,
+        id: Date.now(),
+      },
+    ]);
+
+    showNotification(
+      "Model został pomyślnie wytrenowany.",
+      "success",
+    );
   };
 
   const stages: { id: Stage; label: string }[] = [
@@ -590,12 +657,16 @@ const DatasetPage = () => {
 
                 {/* Wykres brakujących wartości */}
                 <div className="mt-8">
-                  <MissingValuesChart columns={profile.columns} />
+                  <MissingValuesChart
+                    key={`missing-${datasetId}-${chartsVersion}`}
+                    columns={profile.columns}
+                  />
                 </div>
 
                 {/* Rozkład wartości */}
                 <div className="mt-8">
                   <DistributionChart
+                    key={`distribution-${datasetId}-${chartsVersion}`}
                     datasetId={Number(datasetId)}
                     columns={profile.columns}
                   />
@@ -604,6 +675,7 @@ const DatasetPage = () => {
                 {/* Wykres pudełkowy */}
                 <div className="mt-8">
                   <BoxplotChart
+                    key={`boxplot-${datasetId}-${chartsVersion}`}
                     datasetId={Number(datasetId)}
                     columns={profile.columns}
                   />
@@ -612,6 +684,7 @@ const DatasetPage = () => {
                 {/* Heatmapa korelacji */}
                 <div className="mt-8">
                   <CorrelationHeatmap
+                    key={`correlation-${datasetId}-${chartsVersion}`}
                     datasetId={Number(datasetId)}
                   />
                 </div>
@@ -620,6 +693,7 @@ const DatasetPage = () => {
                 {targetColumn && (
                   <div className="mt-8">
                     <TargetCorrelationChart
+                      key={`target-correlation-${datasetId}-${chartsVersion}`}
                       datasetId={Number(datasetId)}
                       targetColumn={targetColumn}
                     />
@@ -628,26 +702,27 @@ const DatasetPage = () => {
               </section>
             )}
 
+            {/* Data Preparation */}
             {activeStage === "preparation" && (
-              <DataPreparation datasetId={Number(datasetId)} />
+              <DataPreparation
+                datasetId={Number(datasetId)}
+                onDataSaved={handlePreparationSaved}
+              />
             )}
 
+            {/* Modeling */}
             {activeStage === "modeling" && (
               <Modeling
                 datasetId={Number(datasetId)}
                 targetColumn={targetColumn}
                 columns={profile.columns}
+                onModelingComplete={handleModelingComplete}
               />
             )}
 
+            {/* Evaluation */}
             {activeStage === "evaluation" && (
-              <section>
-                <h2 className="text-xl font-semibold">Evaluation</h2>
-                <p className="mt-2 text-gray-600">
-                  Ewaluacja modeli będzie dostępna w kolejnym
-                  etapie implementacji.
-                </p>
-              </section>
+              <Evaluation runs={modelingRuns} />
             )}
           </div>
         </div>

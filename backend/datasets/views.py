@@ -13,6 +13,7 @@ from .serializers import (
     DatasetColumnTypeSerializer,
     RemoveColumnsSerializer,
     RemoveRowsSerializer,
+    RemoveOutliersSerializer,
     FillMissingValuesSerializer,
     CreateSyntheticColumnSerializer,
     TargetColumnSerializer,
@@ -29,6 +30,7 @@ from .preparation import (
     remove_columns,
     remove_empty_rows,
     remove_duplicate_rows,
+    remove_outliers,
     fill_missing_values,
     save_prepared_dataset,
     create_synthetic_column,
@@ -356,6 +358,67 @@ class DatasetRemoveColumnsView(APIView):
         return Response({
             "dataset_id": dataset.id,
             "saved": save,
+            "columns": [str(column) for column in result.columns],
+            "rows": preview,
+            "preview_rows": len(preview),
+            "summary": summary,
+        })
+
+class DatasetRemoveOutliersView(APIView):
+    def post(self, request, pk):
+        dataset = generics.get_object_or_404(
+            Dataset.objects.filter(
+                project__owner=request.user
+            ),
+            pk=pk,
+        )
+
+        serializer = RemoveOutliersSerializer(data=request.data)
+        serializer.is_valid(raise_exception=True)
+
+        data = serializer.validated_data
+
+        try:
+            dataframe = load_prepared_dataset(dataset)
+
+            result, summary = remove_outliers(
+                dataframe=dataframe,
+                columns=data["columns"],
+                std_threshold=data["std_threshold"],
+                custom_rules=data["custom_rules"],
+            )
+
+            if data["save"]:
+                save_prepared_dataset(dataset, result)
+
+                operations = dataset.preparation_state.get(
+                    "operations", []
+                )
+                operations.append(summary)
+
+                dataset.preparation_state = {
+                    **dataset.preparation_state,
+                    "operations": operations,
+                }
+
+                dataset.save(
+                    update_fields=["preparation_state", "updated_at"]
+                )
+
+        except (ValueError, OSError) as exc:
+            raise ValidationError(str(exc)) from exc
+
+        preview = json.loads(
+            result.head(10).to_json(
+                orient="records",
+                date_format="iso",
+                force_ascii=False,
+            )
+        )
+
+        return Response({
+            "dataset_id": dataset.id,
+            "saved": data["save"],
             "columns": [str(column) for column in result.columns],
             "rows": preview,
             "preview_rows": len(preview),

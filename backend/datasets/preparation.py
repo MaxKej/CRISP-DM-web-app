@@ -241,3 +241,153 @@ def create_synthetic_column(
     }
 
     return result, summary
+
+def remove_outliers(
+    dataframe: pd.DataFrame,
+    columns: list[str],
+    std_threshold: int | None,
+    custom_rules: list[dict[str, Any]],
+) -> tuple[pd.DataFrame, dict[str, Any]]:
+    """Usuwa rekordy wskazane przez reguły wartości odstających."""
+
+    if not columns and not custom_rules:
+        raise ValueError(
+            "Wybierz kolumny do analizy lub dodaj regułę niestandardową."
+        )
+
+    if std_threshold is not None and std_threshold not in {2, 3, 4, 5, 6}:
+        raise ValueError(
+            "Próg odchyleń standardowych musi wynosić od 2 do 6."
+        )
+
+    if columns and std_threshold is None:
+        raise ValueError(
+            "Wybierz próg odchyleń standardowych."
+        )
+
+    if len(columns) != len(set(columns)):
+        raise ValueError(
+            "Lista kolumn zawiera powtórzenia."
+        )
+
+    result = dataframe.copy()
+    remove_mask = pd.Series(False, index=dataframe.index)
+
+    standard_deviation_summary = {}
+
+    # Reguły oparte na odchyleniu standardowym.
+    for column in columns:
+        if column not in dataframe.columns:
+            raise ValueError(
+                f"Nie znaleziono kolumny '{column}'."
+            )
+
+        if not pd.api.types.is_numeric_dtype(dataframe[column]):
+            raise ValueError(
+                f"Kolumna '{column}' nie jest kolumną liczbową."
+            )
+
+        mean = dataframe[column].mean()
+        std = dataframe[column].std()
+
+        if pd.isna(mean) or pd.isna(std):
+            raise ValueError(
+                f"Nie można obliczyć odchylenia standardowego "
+                f"dla kolumny '{column}'."
+            )
+
+        lower_bound = mean - std_threshold * std
+        upper_bound = mean + std_threshold * std
+
+        column_mask = (
+            (dataframe[column] < lower_bound)
+            | (dataframe[column] > upper_bound)
+        ).fillna(False)
+
+        remove_mask |= column_mask
+
+        standard_deviation_summary[column] = {
+            "mean": float(mean),
+            "std": float(std),
+            "threshold": std_threshold,
+            "lower_bound": float(lower_bound),
+            "upper_bound": float(upper_bound),
+            "rows_removed": int(column_mask.sum()),
+        }
+
+    # Reguły niestandardowe.
+    allowed_operators = {
+        "eq", "ne", "lt", "lte", "gt", "gte"
+    }
+
+    custom_rules_summary = []
+
+    for rule in custom_rules:
+        column = rule["column"]
+        operator = rule["operator"]
+        value = rule["value"]
+
+        if column not in dataframe.columns:
+            raise ValueError(
+                f"Nie znaleziono kolumny '{column}'."
+            )
+
+        if not pd.api.types.is_numeric_dtype(dataframe[column]):
+            raise ValueError(
+                f"Reguły niestandardowe wymagają kolumny liczbowej: "
+                f"'{column}'."
+            )
+
+        if operator not in allowed_operators:
+            raise ValueError(
+                f"Nieobsługiwany operator '{operator}'."
+            )
+
+        try:
+            value = float(value)
+        except (TypeError, ValueError) as exc:
+            raise ValueError(
+                f"Wartość reguły dla kolumny '{column}' musi być liczbą."
+            ) from exc
+
+        series = dataframe[column]
+
+        if operator == "eq":
+            rule_mask = series == value
+        elif operator == "ne":
+            rule_mask = series != value
+        elif operator == "lt":
+            rule_mask = series < value
+        elif operator == "lte":
+            rule_mask = series <= value
+        elif operator == "gt":
+            rule_mask = series > value
+        else:
+            rule_mask = series >= value
+
+        rule_mask = rule_mask.fillna(False)
+        remove_mask |= rule_mask
+
+        custom_rules_summary.append({
+            "column": column,
+            "operator": operator,
+            "value": value,
+            "rows_matching": int(rule_mask.sum()),
+        })
+
+    rows_before = len(dataframe)
+    result = dataframe.loc[~remove_mask].copy()
+    rows_removed = rows_before - len(result)
+
+    summary = {
+        "type": "remove_outliers",
+        "columns": columns,
+        "std_threshold": std_threshold,
+        "standard_deviation_rules": standard_deviation_summary,
+        "custom_rules": custom_rules_summary,
+        "rows_before": rows_before,
+        "rows_after": len(result),
+        "rows_removed": rows_removed,
+    }
+
+    return result, summary

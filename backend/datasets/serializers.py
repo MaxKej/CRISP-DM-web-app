@@ -188,3 +188,43 @@ class ModelingSerializer(serializers.Serializer):
             })
 
         return attrs
+
+
+class CustomOutlierRuleSerializer(serializers.Serializer):
+    column = serializers.CharField()
+    operator = serializers.ChoiceField(
+        choices=[
+            "eq",
+            "ne",
+            "lt",
+            "lte",
+            "gt",
+            "gte",
+        ]
+    )
+    value = serializers.FloatField()
+
+class RemoveOutliersSerializer(serializers.Serializer):
+    columns = serializers.ListField(
+        child=serializers.CharField(),
+        required=False,
+        default=list,
+    )
+    std_threshold = serializers.IntegerField(
+        required=False,
+        allow_null=True,
+        default=None,
+    )
+    custom_rules = CustomOutlierRuleSerializer(
+        many=True,
+        required=False,
+        default=list,
+    )
+    save = serializers.BooleanField(default=False)
+
+    def validate_std_threshold(self, value):
+        if value is not None and value not in {2, 3, 4, 5, 6}:
+            raise serializers.ValidationError(
+                "Próg musi wynosić od 2 do 6."
+            )
+        return value

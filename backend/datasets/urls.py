@@ -11,6 +11,7 @@ from .views import (
     DatasetRemoveColumnsView,
     DatasetRemoveEmptyRowsView,
     DatasetRemoveDuplicatesView,
+    DatasetRemoveOutliersView,
     DatasetFillMissingValuesView,
     DatasetCreateSyntheticColumnView,
     DatasetTargetCorrelationsView,
@@ -69,6 +70,11 @@ urlpatterns = [
         "<int:pk>/preparation/remove-duplicates/",
         DatasetRemoveDuplicatesView.as_view(),
         name="dataset-remove-duplicates",
+    ),
+    path(
+        "<int:pk>/preparation/remove-outliers/",
+        DatasetRemoveOutliersView.as_view(),
+        name="dataset-remove-outliers",
     ),
     path(
         "<int:pk>/preparation/fill-missing-values/",

@@ -1,6 +1,6 @@
 
 import { useState } from "react";
-import type { FormEvent } from "react";
+import type { SubmitEvent } from "react";
 
 import { runDatasetModeling } from "../../api/datasets";
 
@@ -14,6 +14,12 @@ interface ModelingProps {
   datasetId: number;
   targetColumn: string;
   columns: ProfileColumn[];
+
+  onModelingComplete: (run: {
+    task_type: ModelingTaskType;
+    model_type: ModelingModelType;
+    result: Record<string, unknown>;
+  }) => void;
 }
 
 const regressionModels = [
@@ -50,6 +56,7 @@ const Modeling = ({
   datasetId,
   targetColumn,
   columns,
+  onModelingComplete,
 }: ModelingProps) => {
   const [taskType, setTaskType] =
     useState<ModelingTaskType>("regression");
@@ -97,7 +104,7 @@ const Modeling = ({
   };
 
   const handleSubmit = async (
-    event: FormEvent<HTMLFormElement>,
+    event: SubmitEvent<HTMLFormElement>,
   ) => {
     event.preventDefault();
 
@@ -113,10 +120,16 @@ const Modeling = ({
     setIsCompleted(false);
 
     try {
-      await runDatasetModeling(datasetId, {
+      const result = await runDatasetModeling(datasetId, {
         task_type: taskType,
         model_type: modelType,
         excluded_features: excludedFeatures,
+      });
+
+        onModelingComplete({
+        task_type: taskType,
+        model_type: modelType,
+        result,
       });
 
       setIsCompleted(true);
